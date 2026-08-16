@@ -1,0 +1,273 @@
+export type VenueCategory = "concerts" | "museums_exhibits" | "classical" | "comedy";
+
+export type VenueSource = {
+  venue: string;
+  city: string;
+  url: string;
+  source: string;
+  category?: VenueCategory;
+  /** Extra instruction for shared calendars that list several halls. */
+  promptHint?: string;
+};
+
+// Venue calendar pages that get scraped on a schedule.
+export const VENUE_SOURCES: VenueSource[] = [
+  // Concerts
+  { venue: "Chase Center", city: "San Francisco", url: "https://www.chasecenter.com/events", source: "Chase Center", category: "concerts" },
+  { venue: "Bill Graham Civic Auditorium", city: "San Francisco", url: "https://www.livenation.com/venue/KovZpZAEAlvA/bill-graham-civic-auditorium-events", source: "Live Nation", category: "concerts" },
+  { venue: "The Masonic", city: "San Francisco", url: "https://www.livenation.com/venue/KovZpZAJ6nlA/the-masonic-events", source: "Live Nation", category: "concerts" },
+  { venue: "The Warfield", city: "San Francisco", url: "https://www.thewarfieldtheatre.com/events", source: "The Warfield", category: "concerts" },
+  { venue: "The Regency Ballroom", city: "San Francisco", url: "https://www.theregencyballroom.com/events", source: "The Regency Ballroom", category: "concerts" },
+  { venue: "Bimbo's 365 Club", city: "San Francisco", url: "https://bimbos365club.com/calendar/", source: "Bimbo's 365 Club", category: "concerts" },
+  { venue: "The Fillmore", city: "San Francisco", url: "https://www.thefillmore.com/events", source: "The Fillmore", category: "concerts" },
+  { venue: "The Independent", city: "San Francisco", url: "https://www.theindependentsf.com/", source: "The Independent", category: "concerts" },
+  { venue: "The Great American Music Hall", city: "San Francisco", url: "https://gamh.com/calendar/", source: "Great American Music Hall", category: "concerts" },
+  { venue: "Bottom of the Hill", city: "San Francisco", url: "https://www.bottomofthehill.com/calendar.html", source: "Bottom of the Hill", category: "concerts" },
+  { venue: "Rickshaw Stop", city: "San Francisco", url: "https://rickshawstop.com/", source: "Rickshaw Stop", category: "concerts" },
+  { venue: "The Lost Church", city: "San Francisco", url: "https://www.thelostchurch.com/sf-calendar", source: "The Lost Church", category: "concerts" },
+  { venue: "The Chapel", city: "San Francisco", url: "https://thechapelsf.com/calendar/", source: "The Chapel", category: "concerts" },
+  { venue: "Thee Parkside", city: "San Francisco", url: "https://theeparkside.com/", source: "Thee Parkside", category: "concerts" },
+  { venue: "Make-Out Room", city: "San Francisco", url: "https://makeoutroom.com/calendar/", source: "Make-Out Room", category: "concerts" },
+  { venue: "El Rio", city: "San Francisco", url: "https://www.elriosf.com/calendar", source: "El Rio", category: "concerts" },
+  { venue: "DNA Lounge", city: "San Francisco", url: "https://www.dnalounge.com/calendar/", source: "DNA Lounge", category: "concerts" },
+  { venue: "The Hotel Utah Saloon", city: "San Francisco", url: "https://hotelutahsaloon.com/calendar/", source: "Hotel Utah Saloon", category: "concerts" },
+  { venue: "SFJAZZ Center", city: "San Francisco", url: "https://www.sfjazz.org/tickets/calendar/", source: "SFJAZZ", category: "concerts" },
+  { venue: "The Boom Boom Room", city: "San Francisco", url: "https://boomboomroom.com/calendar/", source: "Boom Boom Room", category: "concerts" },
+  { venue: "Biscuits and Blues", city: "San Francisco", url: "https://www.biscuitsandblues.com/calendar", source: "Biscuits and Blues", category: "concerts" },
+  { venue: "Sheba Piano Lounge", city: "San Francisco", url: "https://shebapianolounge.com/", source: "Sheba Piano Lounge", category: "concerts" },
+  { venue: "Golden Gate Park", city: "San Francisco", url: "https://goldengatepark.com/events", source: "Golden Gate Park", category: "concerts" },
+  { venue: "The Greek Theatre", city: "Berkeley", url: "https://thegreekberkeley.com/", source: "The Greek Theatre Berkeley", category: "concerts" },
+  { venue: "The Henry J", city: "Berkeley", url: "https://www.thehenryj.org/", source: "The Henry J", category: "concerts" },
+  { venue: "The UC Theatre", city: "Berkeley", url: "https://www.theuctheatre.org/events/", source: "The UC Theatre", category: "concerts" },
+  { venue: "Zellerbach Hall", city: "Berkeley", url: "https://calperformances.org/calendar/", source: "Cal Performances", category: "concerts" },
+  { venue: "Freight & Salvage", city: "Berkeley", url: "https://thefreight.org/shows/", source: "Freight & Salvage", category: "concerts" },
+  { venue: "Ashkenaz Music & Dance Community Center", city: "Berkeley", url: "https://www.ashkenaz.com/full-calendar", source: "Ashkenaz", category: "concerts" },
+  { venue: "924 Gilman", city: "Berkeley", url: "https://924gilman.org/calendar/", source: "924 Gilman", category: "concerts" },
+  { venue: "The Starry Plough", city: "Berkeley", url: "https://starryploughpub.com/", source: "The Starry Plough", category: "concerts" },
+  { venue: "Cornerstone Berkeley", city: "Berkeley", url: "https://www.prekindle.com/events/cornerstone", source: "Cornerstone Berkeley", category: "concerts" },
+  { venue: "Fox Theater Oakland", city: "Oakland", url: "https://thefoxoakland.com/", source: "Fox Theater Oakland", category: "concerts" },
+  { venue: "Oakland Arena", city: "Oakland", url: "https://www.theoaklandarena.com/events", source: "Oakland Arena", category: "concerts" },
+  { venue: "Yoshi's", city: "Oakland", url: "https://yoshis.com/calendar/", source: "Yoshi's Oakland", category: "concerts" },
+  { venue: "Paramount Theatre", city: "Oakland", url: "https://www.livenation.com/venue/KovZpZAFkIlA/paramount-theatre-oakland-events", source: "Paramount Theatre Oakland", category: "concerts" },
+  { venue: "SAP Center", city: "San Jose", url: "https://www.sapcenter.com/events", source: "SAP Center", category: "concerts" },
+  { venue: "The Ritz", city: "San Jose", url: "https://theritzsanjose.com/", source: "The Ritz San Jose", category: "concerts" },
+  { venue: "Hammer Theatre Center", city: "San Jose", url: "https://hammertheatre.com/events/", source: "Hammer Theatre Center", category: "concerts" },
+  { venue: "San Jose Improv", city: "San Jose", url: "https://improv.com/sanjose/", source: "San Jose Improv", category: "concerts" },
+  {
+    venue: "San Jose Civic",
+    city: "San Jose",
+    url: "https://sanjosetheaters.org/calendar/",
+    source: "San Jose Theaters",
+    category: "concerts",
+    promptHint: "This calendar covers several halls. Only include events held at the San Jose Civic; skip every event at any other theater.",
+  },
+  {
+    venue: "San Jose Center for the Performing Arts",
+    city: "San Jose",
+    url: "https://sanjosetheaters.org/calendar/",
+    source: "San Jose Theaters",
+    category: "concerts",
+    promptHint: "This calendar covers several halls. Only include events held at the San Jose Center for the Performing Arts; skip every event at any other theater.",
+  },
+  {
+    venue: "California Theatre",
+    city: "San Jose",
+    url: "https://sanjosetheaters.org/calendar/",
+    source: "San Jose Theaters",
+    category: "concerts",
+    promptHint: "This calendar covers several halls. Only include events held at the California Theatre; skip every event at any other theater.",
+  },
+  {
+    venue: "Montgomery Theatre",
+    city: "San Jose",
+    url: "https://sanjosetheaters.org/calendar/",
+    source: "San Jose Theaters",
+    category: "concerts",
+    promptHint: "This calendar covers several halls. Only include events held at the Montgomery Theatre; skip every event at any other theater.",
+  },
+  { venue: "Discovery Meadow", city: "San Jose", url: "https://www.sanjose.org/events", source: "Visit San Jose", category: "concerts", promptHint: "Only include events taking place at Discovery Meadow or Arena Green East; skip everything at other locations." },
+
+  // Museums & Exhibits
+  { venue: "SFMOMA", city: "San Francisco", url: "https://www.sfmoma.org/exhibitions/", source: "SFMOMA", category: "museums_exhibits" },
+  { venue: "de Young Museum", city: "San Francisco", url: "https://deyoung.famsf.org/exhibitions", source: "de Young Museum", category: "museums_exhibits" },
+  { venue: "Legion of Honor", city: "San Francisco", url: "https://legionofhonor.famsf.org/exhibitions", source: "Legion of Honor", category: "museums_exhibits" },
+  { venue: "Asian Art Museum", city: "San Francisco", url: "https://asianart.org/exhibitions/", source: "Asian Art Museum", category: "museums_exhibits" },
+  { venue: "Exploratorium", city: "San Francisco", url: "https://www.exploratorium.edu/visit/calendar", source: "Exploratorium", category: "museums_exhibits" },
+  { venue: "California Academy of Sciences", city: "San Francisco", url: "https://www.calacademy.org/visit", source: "California Academy of Sciences", category: "museums_exhibits" },
+  { venue: "Contemporary Jewish Museum", city: "San Francisco", url: "https://thecjm.org/exhibitions/", source: "Contemporary Jewish Museum", category: "museums_exhibits" },
+  { venue: "Museum of Craft and Design", city: "San Francisco", url: "https://sfmcd.org/exhibitions/", source: "Museum of Craft and Design", category: "museums_exhibits" },
+  { venue: "Yerba Buena Center for the Arts", city: "San Francisco", url: "https://ybca.org/whats-on/", source: "Yerba Buena Center for the Arts", category: "museums_exhibits" },
+  { venue: "Oakland Museum of California", city: "Oakland", url: "https://museumca.org/exhibitions", source: "Oakland Museum of California", category: "museums_exhibits" },
+  { venue: "BAMPFA", city: "Berkeley", url: "https://bampfa.org/program/film-exhibitions", source: "BAMPFA", category: "museums_exhibits" },
+  { venue: "Lawrence Hall of Science", city: "Berkeley", url: "https://lawrencehallofscience.org/visit/exhibits/", source: "Lawrence Hall of Science", category: "museums_exhibits" },
+  { venue: "Chabot Space & Science Center", city: "Oakland", url: "https://chabotspace.org/visit/exhibits/", source: "Chabot Space & Science Center", category: "museums_exhibits" },
+  { venue: "San Jose Museum of Art", city: "San Jose", url: "https://sjma.org/exhibitions/", source: "San Jose Museum of Art", category: "museums_exhibits" },
+  { venue: "The Tech Interactive", city: "San Jose", url: "https://www.thetech.org/exhibits-activities", source: "The Tech Interactive", category: "museums_exhibits" },
+  { venue: "Computer History Museum", city: "Mountain View", url: "https://computerhistory.org/visit/exhibits/", source: "Computer History Museum", category: "museums_exhibits" },
+  { venue: "Cantor Arts Center", city: "Stanford", url: "https://cantorarts.stanford.edu/exhibitions", source: "Cantor Arts Center", category: "museums_exhibits" },
+  { venue: "San Jose Museum of Quilts & Textiles", city: "San Jose", url: "https://sanjosequiltmuseum.org/exhibitions/", source: "San Jose Museum of Quilts & Textiles", category: "museums_exhibits" },
+  { venue: "Museum of Palo Alto", city: "Palo Alto", url: "https://museumofpaloalto.org/", source: "Museum of Palo Alto", category: "museums_exhibits" },
+  { venue: "The Museum of Creativity", city: "San Francisco", url: "https://www.themuseumofcreativity.org/", source: "Museum of Creativity", category: "museums_exhibits" },
+  { venue: "San Francisco Railway Museum", city: "San Francisco", url: "https://www.streetcar.org/railway-museum/", source: "San Francisco Railway Museum", category: "museums_exhibits" },
+
+  // East Bay Museums & Exhibits
+  { venue: "Lindsay Wildlife Experience", city: "Walnut Creek", url: "https://lindsaywildlife.org/events/", source: "Lindsay Wildlife Experience", category: "museums_exhibits" },
+  { venue: "USS Hornet Museum", city: "Alameda", url: "https://uss-hornet.org/events/", source: "USS Hornet Museum", category: "museums_exhibits" },
+  { venue: "Rosie the Riveter WWII Home Front National Historical Park", city: "Richmond", url: "https://www.nps.gov/rori/planyourvisit/calendar.htm", source: "National Park Service", category: "museums_exhibits" },
+  { venue: "Phoebe A. Hearst Museum of Anthropology", city: "Berkeley", url: "https://hearstmuseum.berkeley.edu/visit/exhibitions/", source: "Phoebe A. Hearst Museum", category: "museums_exhibits" },
+  { venue: "The Magnes Collection of Jewish Art and Life", city: "Berkeley", url: "https://magnes.berkeley.edu/exhibitions", source: "The Magnes Collection", category: "museums_exhibits" },
+  { venue: "Blackhawk Museum", city: "Danville", url: "https://blackhawkmuseum.org/exhibits/", source: "Blackhawk Museum", category: "museums_exhibits" },
+  { venue: "Pardee Home Museum", city: "Oakland", url: "https://pardeehome.org/events/", source: "Pardee Home Museum", category: "museums_exhibits" },
+  { venue: "Camron-Stanford House", city: "Oakland", url: "https://cshouse.org/events/", source: "Camron-Stanford House", category: "museums_exhibits" },
+  { venue: "Dunsmuir Hellman Historic Estate", city: "Oakland", url: "https://dunsmuirhellman.com/events/", source: "Dunsmuir Hellman Historic Estate", category: "museums_exhibits" },
+  { venue: "Hayward Area Historical Society", city: "Hayward", url: "https://www.haywardareahistory.org/events", source: "Hayward Area Historical Society", category: "museums_exhibits" },
+  { venue: "Museum of Local History", city: "Fremont", url: "https://museumoflocalhistory.org/", source: "Museum of Local History", category: "museums_exhibits" },
+  { venue: "Albany Historical Society", city: "Albany", url: "https://albanyhistoricalsociety.org/", source: "Albany Historical Society", category: "museums_exhibits" },
+  { venue: "Museum of the San Ramon Valley", city: "Danville", url: "https://museumsrv.org/exhibits/", source: "Museum of the San Ramon Valley", category: "museums_exhibits" },
+  { venue: "Pacific Pinball Museum", city: "Alameda", url: "https://pacificpinball.org/events/", source: "Pacific Pinball Museum", category: "museums_exhibits" },
+  { venue: "Habitot Children's Museum", city: "Berkeley", url: "https://habitot.org/events/", source: "Habitot Children's Museum", category: "museums_exhibits", promptHint: "Include family and children programs, workshops, and exhibits." },
+
+  // Peninsula Museums & Exhibits
+  { venue: "The Anderson Collection at Stanford", city: "Stanford", url: "https://anderson.stanford.edu/exhibitions/", source: "Anderson Collection", category: "museums_exhibits" },
+  { venue: "The Foster Museum", city: "Palo Alto", url: "https://thefoster.org/exhibitions/", source: "The Foster Museum", category: "museums_exhibits" },
+  { venue: "Sanchez Art Center", city: "Pacifica", url: "https://www.sanchezartcenter.org/exhibitions/", source: "Sanchez Art Center", category: "museums_exhibits" },
+  { venue: "M Stark Gallery", city: "Half Moon Bay", url: "https://mstarkgallery.com/", source: "M Stark Gallery", category: "museums_exhibits" },
+  { venue: "San Mateo County History Museum", city: "Redwood City", url: "https://historysmc.org/events/", source: "San Mateo County History Museum", category: "museums_exhibits" },
+  { venue: "Hiller Aviation Museum", city: "San Carlos", url: "https://hiller.org/events/", source: "Hiller Aviation Museum", category: "museums_exhibits" },
+  { venue: "CuriOdyssey", city: "San Mateo", url: "https://curiodyssey.org/events/", source: "CuriOdyssey", category: "museums_exhibits", promptHint: "Include exhibits, family programs, and special events." },
+
+  // North Bay Museums & Exhibits
+  { venue: "di Rosa Center for Contemporary Art", city: "Napa", url: "https://www.dirosaart.org/exhibitions/", source: "di Rosa Center for Contemporary Art", category: "museums_exhibits" },
+  { venue: "Charles M. Schulz Museum", city: "Santa Rosa", url: "https://schulzmuseum.org/exhibitions/", source: "Charles M. Schulz Museum", category: "museums_exhibits" },
+  { venue: "Bay Area Discovery Museum", city: "Sausalito", url: "https://bayareadiscoverymuseum.org/events/", source: "Bay Area Discovery Museum", category: "museums_exhibits", promptHint: "Include exhibits, family programs, and special events." },
+  { venue: "Bolinas Museum", city: "Bolinas", url: "https://www.bolinasmuseum.org/exhibitions", source: "Bolinas Museum", category: "museums_exhibits" },
+  { venue: "Marin History Museum", city: "San Rafael", url: "https://www.marinhistory.org/events", source: "Marin History Museum", category: "museums_exhibits" },
+  { venue: "Marin MOCA", city: "Novato", url: "https://marinmoca.org/exhibitions/", source: "Marin Museum of Contemporary Art", category: "museums_exhibits" },
+  { venue: "Marin Museum of Bicycling", city: "Fairfax", url: "https://mmbhof.org/", source: "Marin Museum of Bicycling", category: "museums_exhibits" },
+  { venue: "Museum of the American Indian", city: "Novato", url: "https://www.marinindian.com/events", source: "Museum of the American Indian", category: "museums_exhibits" },
+  { venue: "Richardson Bay Audubon Center", city: "Tiburon", url: "https://richardsonbay.audubon.org/events", source: "Richardson Bay Audubon Center", category: "museums_exhibits" },
+  { venue: "Bay Model Visitor Center", city: "Sausalito", url: "https://www.spn.usace.army.mil/Missions/Recreation/Bay-Model-Visitor-Center/", source: "Bay Model Visitor Center", category: "museums_exhibits" },
+  { venue: "Space Station Museum", city: "Novato", url: "https://www.spacestationmuseum.com/", source: "Space Station Museum", category: "museums_exhibits" },
+  { venue: "Sonoma County Museum", city: "Santa Rosa", url: "https://museumsc.org/exhibitions/", source: "Museum of Sonoma County", category: "museums_exhibits" },
+  { venue: "California Indian Museum and Cultural Center", city: "Santa Rosa", url: "https://cimcc.org/events/", source: "California Indian Museum and Cultural Center", category: "museums_exhibits" },
+  { venue: "Jesse Peter Multicultural Museum", city: "Santa Rosa", url: "https://museum.santarosa.edu/exhibits", source: "Jesse Peter Multicultural Museum", category: "museums_exhibits" },
+  { venue: "Pacific Coast Air Museum", city: "Santa Rosa", url: "https://pacificcoastairmuseum.org/events/", source: "Pacific Coast Air Museum", category: "museums_exhibits" },
+  { venue: "Healdsburg Museum", city: "Healdsburg", url: "https://healdsburgmuseum.org/exhibits/", source: "Healdsburg Museum", category: "museums_exhibits" },
+  { venue: "Sonoma State Historic Park", city: "Sonoma", url: "https://www.parks.ca.gov/?page_id=479", source: "Sonoma State Historic Park", category: "museums_exhibits", promptHint: "Include exhibits and public programs at the Mission San Francisco Solano and the Vallejo Home." },
+  { venue: "The MAC — Napa Valley Museum of Art & Culture", city: "St. Helena", url: "https://napavalleymuseum.org/exhibitions/", source: "Napa Valley Museum of Art & Culture", category: "museums_exhibits" },
+  { venue: "Carolyn Parr Nature Center Museum", city: "Napa", url: "https://www.napanaturecenter.org/", source: "Carolyn Parr Nature Center Museum", category: "museums_exhibits" },
+  { venue: "Sharpsteen Museum", city: "Calistoga", url: "https://www.sharpsteenmuseum.org/", source: "Sharpsteen Museum", category: "museums_exhibits" },
+
+  // Classical / Symphony
+  { venue: "Davies Symphony Hall", city: "San Francisco", url: "https://www.sfsymphony.org/Buy-Tickets/Calendar", source: "San Francisco Symphony", category: "classical" },
+  { venue: "War Memorial Opera House", city: "San Francisco", url: "https://www.sfopera.com/on-stage/calendar/", source: "San Francisco Opera", category: "classical", promptHint: "Only include opera performances staged at the War Memorial Opera House." },
+  { venue: "War Memorial Opera House", city: "San Francisco", url: "https://www.sfballet.org/performances/", source: "San Francisco Ballet", category: "classical", promptHint: "These are San Francisco Ballet performances at the War Memorial Opera House." },
+  { venue: "Herbst Theatre", city: "San Francisco", url: "https://sfwmpac.org/calendar/", source: "SF War Memorial & Performing Arts Center", category: "classical", promptHint: "Only include events taking place in Herbst Theatre; skip other halls." },
+  { venue: "San Francisco Conservatory of Music", city: "San Francisco", url: "https://sfcm.edu/performance-calendar", source: "SF Conservatory of Music", category: "classical" },
+  { venue: "Grace Cathedral", city: "San Francisco", url: "https://gracecathedral.org/events/", source: "Grace Cathedral", category: "classical", promptHint: "Only include concerts, recitals, and musical performances; skip worship services and tours." },
+  { venue: "Mission Dolores Basilica", city: "San Francisco", url: "https://www.missiondolores.org/events/", source: "Mission Dolores Basilica", category: "classical", promptHint: "Only include concerts and musical performances; skip masses and parish meetings." },
+  { venue: "Old First Church", city: "San Francisco", url: "https://www.oldfirstconcerts.org/calendar/", source: "Old First Concerts", category: "classical" },
+  { venue: "Curran Theatre", city: "San Francisco", url: "https://www.sfcurran.com/whats-on/", source: "Curran Theatre", category: "classical" },
+
+  // East Bay Classical / Symphony
+  { venue: "Oakland Symphony", city: "Oakland", url: "https://www.oaklandsymphony.org/concerts/", source: "Oakland Symphony", category: "classical" },
+  { venue: "Paramount Theatre", city: "Oakland", url: "https://www.livenation.com/venue/KovZpZAFkIlA/paramount-theatre-oakland-events", source: "Paramount Theatre Oakland", category: "classical", promptHint: "Only include classical, symphony, opera, and orchestral performances at the Paramount Theatre; skip comedy, rock, and pop shows." },
+  { venue: "Scottish Rite Center", city: "Oakland", url: "https://www.oaklandscottishrite.org/events/", source: "Scottish Rite Center", category: "classical", promptHint: "Only include classical, chamber, and orchestral concerts; skip meetings and private events." },
+  { venue: "Piedmont Center for the Arts", city: "Piedmont", url: "https://piedmontcenterforthearts.org/events/", source: "Piedmont Center for the Arts", category: "classical", promptHint: "Only include classical, chamber, and orchestral music performances; skip non-music events." },
+  { venue: "Zellerbach Hall", city: "Berkeley", url: "https://calperformances.org/calendar/", source: "Cal Performances", category: "classical", promptHint: "Only include classical, symphony, and orchestral performances at Zellerbach Hall; skip other genres." },
+  { venue: "Berkeley City Club", city: "Berkeley", url: "https://www.berkeleycityclub.com/events/", source: "Berkeley City Club", category: "classical", promptHint: "Only include classical and chamber music concerts; skip private parties and non-music events." },
+  { venue: "Kaiser Center for the Arts", city: "Oakland", url: "https://www.kaisercenterforthearts.org/events/", source: "Kaiser Center for the Arts", category: "classical", promptHint: "Only include classical, symphony, and orchestral performances; skip other genres and private events." },
+  { venue: "California Symphony", city: "Walnut Creek", url: "https://www.californiasymphony.org/concerts/", source: "California Symphony", category: "classical", promptHint: "Only include concerts by the California Symphony; skip non-symphony events." },
+  { venue: "Lesher Center for the Arts", city: "Walnut Creek", url: "https://www.lesherartscenter.org/calendar/", source: "Lesher Center for the Arts", category: "classical", promptHint: "Only include classical, symphony, opera, and orchestral performances; skip other genres and community events." },
+  { venue: "Diablo Symphony Orchestra", city: "Walnut Creek", url: "https://www.diablosymphony.org/schedule/", source: "Diablo Symphony Orchestra", category: "classical", promptHint: "Only include concerts by the Diablo Symphony Orchestra; skip other events." },
+  { venue: "Livermore-Amador Symphony", city: "Livermore", url: "https://www.livermoreamadorsymphony.org/concerts/", source: "Livermore-Amador Symphony", category: "classical", promptHint: "Only include concerts by the Livermore-Amador Symphony; skip other events." },
+  { venue: "Fremont Symphony Orchestra", city: "Fremont", url: "https://www.fremontsymphony.org/concerts/", source: "Fremont Symphony Orchestra", category: "classical", promptHint: "Only include concerts by the Fremont Symphony Orchestra; skip other events." },
+  { venue: "Ohlone College Smith Center", city: "Fremont", url: "https://www.ohlone.edu/arts/smith-center", source: "Ohlone College Smith Center", category: "classical", promptHint: "Only include classical, symphony, and orchestral music performances; skip other genres and academic events." },
+  { venue: "Prince of Peace Lutheran Church", city: "Fremont", url: "https://poplebanon.org/events/", source: "Prince of Peace Lutheran Church", category: "classical", promptHint: "Only include classical, chamber, and orchestral concerts; skip worship services and parish meetings." },
+  { venue: "Oakland Civic Orchestra", city: "Oakland", url: "https://www.oaklandcivicorchestra.org/", source: "Oakland Civic Orchestra", category: "classical", promptHint: "Only include concerts by the Oakland Civic Orchestra; skip other events." },
+  { venue: "Oakland Community Orchestra", city: "Oakland", url: "https://www.oaklandcommunityorchestra.org/", source: "Oakland Community Orchestra", category: "classical", promptHint: "Only include concerts by the Oakland Community Orchestra; skip other events." },
+  { venue: "Kensington Symphony", city: "Kensington", url: "https://www.kensingtonsymphony.org/", source: "Kensington Symphony", category: "classical", promptHint: "Only include concerts by the Kensington Symphony; skip other events." },
+  { venue: "Castro Valley Orchestra", city: "Castro Valley", url: "https://www.castrovalleyorchestra.org/", source: "Castro Valley Orchestra", category: "classical", promptHint: "Only include concerts by the Castro Valley Orchestra; skip other events." },
+  { venue: "Contra Costa Chamber Orchestra", city: "Walnut Creek", url: "https://www.ccco.org/concerts/", source: "Contra Costa Chamber Orchestra", category: "classical", promptHint: "Only include concerts by the Contra Costa Chamber Orchestra; skip other events." },
+  { venue: "Albany Chamber Orchestra", city: "Albany", url: "https://www.albanychamberorchestra.org/", source: "Albany Chamber Orchestra", category: "classical", promptHint: "Only include concerts by the Albany Chamber Orchestra; skip other events." },
+
+  // North Bay Classical / Symphony
+  { venue: "Santa Rosa Symphony", city: "Santa Rosa", url: "https://www.srsymphony.org/event-calendar/", source: "Santa Rosa Symphony", category: "classical", promptHint: "Only include Santa Rosa Symphony concerts and classical performances at Weill Hall; skip other events." },
+  { venue: "Marin Symphony", city: "San Rafael", url: "https://marinsymphony.org/tickets-events/", source: "Marin Symphony", category: "classical", promptHint: "Only include Marin Symphony concerts and classical orchestral performances; skip other events." },
+  { venue: "Marin Center Exhibit Hall", city: "San Rafael", url: "https://tickets.marincenter.org/", source: "Marin Center", category: "classical", promptHint: "Only include classical, symphony, and chamber music performances at the Marin Center Exhibit Hall; skip other genres and events." },
+  { venue: "Chamber Music Napa Valley", city: "Napa", url: "https://chambermusicnapa.org/", source: "Chamber Music Napa Valley", category: "classical", promptHint: "Only include Chamber Music Napa Valley concerts and classical chamber music events; skip unrelated events." },
+  { venue: "Napa Methodist Church", city: "Napa", url: "https://napamethodist.org/events/", source: "Napa Methodist Church", category: "classical", promptHint: "Only include classical concerts, chamber music, and musical performances at Napa Methodist Church; skip worship services and non-music events." },
+  { venue: "Music in the Vineyards", city: "Napa", url: "https://www.musicinthevineyards.org/events/", source: "Music in the Vineyards", category: "classical", promptHint: "Only include chamber music concerts and classical events from the Music in the Vineyards summer festival; skip non-music events." },
+  { venue: "Festival Napa Valley", city: "Napa", url: "https://festivalnapavalley.org/calendar/", source: "Festival Napa Valley", category: "classical", promptHint: "Only include classical, symphony, chamber, and orchestral performances at Festival Napa Valley; skip wine tastings, parties, and non-classical events." },
+  { venue: "Chamber Music Marin", city: "San Rafael", url: "https://www.chambermusicmarin.org/concert-season", source: "Chamber Music Marin", category: "classical", promptHint: "Only include Chamber Music Marin concerts and classical chamber music events; skip unrelated events." },
+
+  // Peninsula Classical / Symphony
+  { venue: "Peninsula Symphony", city: "San Mateo", url: "https://www.peninsulasymphony.org/", source: "Peninsula Symphony", category: "classical", promptHint: "Only include concerts and performances by the Peninsula Symphony; skip other events." },
+  { venue: "Redwood Symphony", city: "Redwood City", url: "https://redwoodsymphony.org/", source: "Redwood Symphony", category: "classical", promptHint: "Only include concerts and performances by the Redwood Symphony; skip other events." },
+  { venue: "Music at Kohl Mansion", city: "Burlingame", url: "https://www.musicatkohl.org/", source: "Music at Kohl Mansion", category: "classical", promptHint: "Only include classical chamber music concerts and events at the Kohl Mansion; skip non-music events." },
+  { venue: "Bing Concert Hall", city: "Stanford", url: "https://live.stanford.edu/events/events", source: "Stanford Live", category: "classical", promptHint: "Only include classical, symphony, and chamber music performances at Bing Concert Hall; skip events at other venues and non-classical events." },
+
+
+
+  // Comedy
+  { venue: "Punch Line San Francisco", city: "San Francisco", url: "https://www.punchlinecomedyclub.com/shows", source: "Punch Line San Francisco", category: "comedy" },
+  { venue: "Cobb's Comedy Club", city: "San Francisco", url: "https://www.cobbscomedy.com/shows", source: "Cobb's Comedy Club", category: "comedy" },
+  { venue: "Cheaper Than Therapy", city: "San Francisco", url: "https://www.cheapertherapy.com/", source: "Cheaper Than Therapy", category: "comedy" },
+  { venue: "The Setup Comedy Club", city: "San Francisco", url: "https://www.thesetupsf.com/", source: "The Setup Comedy Club", category: "comedy" },
+  { venue: "The Palace Theater", city: "San Francisco", url: "https://www.thepalacesf.com/", source: "The Palace Theater SF", category: "comedy", promptHint: "Only include comedy shows, stand-up, and improv; skip music-only events." },
+  { venue: "The Lost Church", city: "San Francisco", url: "https://www.thelostchurch.com/sf-calendar", source: "The Lost Church", category: "comedy", promptHint: "Only include comedy shows, stand-up, storytelling, and improv; skip music concerts." },
+  { venue: "The Valencia Room", city: "San Francisco", url: "https://www.thevalenciaroom.com/", source: "The Valencia Room", category: "comedy", promptHint: "Only include comedy shows; skip club nights and music-only events." },
+  { venue: "The Spotlight Comedy", city: "San Francisco", url: "https://www.spotlightcomedysf.com/", source: "The Spotlight Comedy", category: "comedy" },
+  { venue: "Bit City Comedy", city: "San Francisco", url: "https://www.bitcitycomedy.com/", source: "Bit City Comedy", category: "comedy" },
+  { venue: "Milk Bar", city: "San Francisco", url: "https://milkbarsf.com/calendar/", source: "Milk Bar", category: "comedy", promptHint: "Only include comedy shows and open mics; skip music-only events." },
+  { venue: "Comet Club", city: "San Francisco", url: "https://www.cometclubsf.com/", source: "Comet Club", category: "comedy", promptHint: "Only include comedy shows; skip DJ and club nights." },
+  { venue: "SF Comedy Underground", city: "San Francisco", url: "https://www.sfcomedyunderground.com/", source: "SF Comedy Underground", category: "comedy" },
+  { venue: "Mirthquake", city: "San Francisco", url: "https://www.mirthquakecomedy.com/", source: "Mirthquake", category: "comedy" },
+  { venue: "Don't Tell Comedy", city: "San Francisco", url: "https://www.donttellcomedy.com/cities/san-francisco", source: "Don't Tell Comedy", category: "comedy", promptHint: "Secret-location pop-up shows in San Francisco; use the announced neighborhood as the venue detail." },
+  { venue: "The Masonic", city: "San Francisco", url: "https://www.livenation.com/venue/KovZpZAJ6nlA/the-masonic-events", source: "Live Nation", category: "comedy", promptHint: "Only include comedy shows and stand-up specials; skip music concerts." },
+  { venue: "Golden Gate Theatre", city: "San Francisco", url: "https://www.broadwaysf.com/events", source: "BroadwaySF", category: "comedy", promptHint: "Only include comedy shows at the Golden Gate Theatre; skip musicals, plays, and other theaters." },
+  { venue: "Curran Theatre", city: "San Francisco", url: "https://www.sfcurran.com/whats-on/", source: "Curran Theatre", category: "comedy", promptHint: "Only include comedy shows and stand-up; skip musicals and plays." },
+  { venue: "Orpheum Theatre", city: "San Francisco", url: "https://www.broadwaysf.com/events", source: "BroadwaySF", category: "comedy", promptHint: "Only include comedy shows at the Orpheum Theatre; skip musicals, plays, and other theaters." },
+
+  // Oakland Comedy
+  { venue: "Comedy Oakland", city: "Oakland", url: "https://www.comedyoakland.com/", source: "Comedy Oakland", category: "comedy" },
+  { venue: "All Out Comedy Theater", city: "Oakland", url: "https://www.alloutcomedy.com/", source: "All Out Comedy Theater", category: "comedy" },
+  { venue: "Pan Theater", city: "Oakland", url: "https://www.pantheater.com/", source: "Pan Theater", category: "comedy" },
+  { venue: "Critical Hit", city: "Oakland", url: "https://www.criticalhitoakland.com/", source: "Critical Hit", category: "comedy" },
+  { venue: "Fox Theater Oakland", city: "Oakland", url: "https://thefoxoakland.com/", source: "Fox Theater Oakland", category: "comedy", promptHint: "Only include comedy shows, stand-up specials, and comedy events at the Fox Theater; skip music concerts." },
+  { venue: "Paramount Theatre Oakland", city: "Oakland", url: "https://www.livenation.com/venue/KovZpZAFkIlA/paramount-theatre-oakland-events", source: "Paramount Theatre Oakland", category: "comedy", promptHint: "Only include comedy shows and stand-up specials at the Paramount Theatre; skip music concerts." },
+
+  // Berkeley Comedy
+  { venue: "The Marsh Berkeley", city: "Berkeley", url: "https://www.themarsh.org/berkeley", source: "The Marsh Berkeley", category: "comedy" },
+  { venue: "Cornerstone Berkeley", city: "Berkeley", url: "https://www.prekindle.com/events/cornerstone", source: "Cornerstone Berkeley", category: "comedy", promptHint: "Only include comedy shows at Cornerstone Berkeley; skip music-only events." },
+  { venue: "Freight & Salvage", city: "Berkeley", url: "https://thefreight.org/shows/", source: "Freight & Salvage", category: "comedy", promptHint: "Only include comedy shows, storytelling, and spoken-word events at Freight & Salvage; skip music concerts." },
+  { venue: "La Peña Cultural Center", city: "Berkeley", url: "https://www.lapenasf.org/calendar", source: "La Peña Cultural Center", category: "comedy", promptHint: "Only include comedy shows, storytelling, and spoken-word events at La Peña; skip music and dance events." },
+
+  // North Bay Comedy
+  { venue: "142 Throckmorton Theatre", city: "Mill Valley", url: "https://142throckmortontheatre.com/events", source: "142 Throckmorton Theatre", category: "comedy", promptHint: "Only include comedy shows, stand-up, and improv; skip music-only events." },
+  { venue: "Improv Marin", city: "San Rafael", url: "https://www.improvmarin.com/", source: "Improv Marin", category: "comedy" },
+  { venue: "Trek Winery", city: "Novato", url: "https://www.trekwinery.com/events", source: "Trek Winery", category: "comedy", promptHint: "Only include comedy shows and stand-up events; skip wine-only events." },
+  { venue: "Ounces Outdoors San Rafael", city: "San Rafael", url: "https://www.ouncesoutdoors.com/sanrafael", source: "Ounces Outdoors San Rafael", category: "comedy", promptHint: "Only include comedy shows and outdoor comedy events at the San Rafael location." },
+  { venue: "Mac's at 19 Broadway", city: "San Rafael", url: "https://www.macssanrafael.com/events", source: "Mac's at 19 Broadway", category: "comedy", promptHint: "Only include comedy shows and stand-up; skip music-only events." },
+  { venue: "McNear's Saloon & Dining House", city: "Petaluma", url: "https://www.mcnears.com/events", source: "McNear's Saloon & Dining House", category: "comedy", promptHint: "Only include comedy shows and stand-up; skip music-only events." },
+  { venue: "Sally Tomatoes", city: "Santa Rosa", url: "https://www.sallytomatoes.com/events", source: "Sally Tomatoes", category: "comedy", promptHint: "Only include comedy shows; skip music-only events." },
+  { venue: "Barrel Proof Comedy", city: "Santa Rosa", url: "https://www.barrelproofcomedy.com/", source: "Barrel Proof Comedy", category: "comedy" },
+  { venue: "Fogbelt Brewing Company", city: "Santa Rosa", url: "https://www.fogbeltbrewing.com/events", source: "Fogbelt Brewing Company", category: "comedy", promptHint: "Only include comedy shows; skip brewery-only events." },
+  { venue: "Luther Burbank Center for the Arts", city: "Santa Rosa", url: "https://www.lutherburbankcenter.org/events/", source: "Luther Burbank Center for the Arts", category: "comedy", promptHint: "Only include comedy shows and stand-up specials; skip music, theater, and other performances." },
+  { venue: "Double Decker Lanes", city: "Santa Rosa", url: "https://www.doubledeckerlanes.com/events", source: "Double Decker Lanes", category: "comedy", promptHint: "Only include comedy shows; skip bowling-only events." },
+  { venue: "Hopmonk Tavern", city: "Petaluma", url: "https://www.hopmonk.com/petaluma/events", source: "Hopmonk Tavern Petaluma", category: "comedy", promptHint: "Only include comedy shows at the Petaluma location; skip music-only events." },
+  { venue: "Barrel Brothers Brewing", city: "Santa Rosa", url: "https://www.barrelbrothersbrewing.com/events", source: "Barrel Brothers Brewing", category: "comedy", promptHint: "Only include comedy shows; skip brewery-only events." },
+  { venue: "Uptown Theatre Napa", city: "Napa", url: "https://www.uptowntheatrenapa.com/events", source: "Uptown Theatre Napa", category: "comedy", promptHint: "Only include comedy shows and stand-up specials; skip music and theater events." },
+  { venue: "Blue Note Napa", city: "Napa", url: "https://www.bluenotejazz.com/napa", source: "Blue Note Napa", category: "comedy", promptHint: "Only include comedy shows and stand-up events; skip music-only events." },
+
+  // Peninsula Comedy
+  { venue: "Sky Lounge", city: "San Mateo", url: "https://www.skyloungesm.com/events", source: "Sky Lounge", category: "comedy" },
+  { venue: "Club Fox", city: "Redwood City", url: "https://www.clubfoxrwc.com/events", source: "Club Fox", category: "comedy" },
+  { venue: "Peninsula Comedy", city: "Burlingame", url: "https://www.peninsulacomedy.com/events", source: "Peninsula Comedy", category: "comedy" },
+  { venue: "Fox Theatre / Little Fox Theatre", city: "Redwood City", url: "https://foxrwc.com/events", source: "Fox Theatre Redwood City", category: "comedy", promptHint: "Only include comedy shows at the Fox Theatre / Little Fox Theatre in Redwood City; skip music and theater events." },
+];
+
+export const CONCERT_VENUES = VENUE_SOURCES.filter((v) => v.category === "concerts");
+export const MUSEUM_VENUES = VENUE_SOURCES.filter((v) => v.category === "museums_exhibits");
+export const CLASSICAL_VENUES = VENUE_SOURCES.filter((v) => v.category === "classical");
+export const COMEDY_VENUES = VENUE_SOURCES.filter((v) => v.category === "comedy");

@@ -1,0 +1,1 @@
+DELETE FROM public.events WHERE category = 'classical' AND venue = 'The Great American Music Hall';
