@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Overrides the wrapper's default Cloudflare target so the build deploys to Netlify instead.
+  nitro: {
+    preset: "netlify",
+  },
 });
