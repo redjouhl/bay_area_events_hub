@@ -189,13 +189,6 @@ function Index() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            {categoryPill("classical", "Classical / Symphony")}
-            {categoryPill("comedy", "Comedy")}
-            {categoryPill("concerts", "Concerts")}
-            {categoryPill("museums_exhibits", "Museums & Exhibits")}
-          </div>
-
           {query.trim() && (
             <div className="mt-8">
               <p className="text-sm uppercase tracking-widest text-muted-foreground">
@@ -224,6 +217,13 @@ function Index() {
             </div>
           </section>
         )}
+
+        <div className="mt-10 flex flex-wrap gap-2">
+          {categoryPill("classical", "Classical / Symphony")}
+          {categoryPill("comedy", "Comedy")}
+          {categoryPill("concerts", "Concerts")}
+          {categoryPill("museums_exhibits", "Museums & Exhibits")}
+        </div>
 
         <section aria-labelledby="all-shows" className="mt-16">
           <h2 id="all-shows" className="text-3xl">
