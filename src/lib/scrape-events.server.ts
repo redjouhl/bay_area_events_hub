@@ -146,7 +146,7 @@ function fingerprint(venue: string, date: string, artist: string, category: stri
   return `${venue}|${date}|${artist}|${category}`.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-const PLACEHOLDER_VALUE = /^(none|n\/a|null|tbd)$/i;
+const PLACEHOLDER_VALUE = /^(none|n\/a|null|tbd|unknown(\s.+)?)$/i;
 
 // Firecrawl's model sometimes fills empty fields with the literal string
 // "null"/"n/a"/etc. instead of omitting them, so a truthy-check alone lets
@@ -299,6 +299,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
 
   const rows = raw
     .filter((e) => typeof e.artist === "string" && e.artist.trim() && isIsoDate(e.date))
+    .filter((e) => !PLACEHOLDER_VALUE.test((e.artist as string).trim()))
     .filter((e) => (e.date as string) >= todayIso)
     .filter((e) => !nonEvent.test(e.artist as string))
     .filter((e) => !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))

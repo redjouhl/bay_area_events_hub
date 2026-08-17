@@ -58,7 +58,7 @@ export function ConcertCard({ concert }: { concert: Concert }) {
       </div>
 
       <div className="flex items-start justify-between gap-3">
-        <Badge variant="secondary" className="border-transparent bg-amber/15 uppercase tracking-wider text-warm">
+        <Badge variant="secondary" className="border-transparent bg-sunset/15 uppercase tracking-wider text-sunset">
           {concert.genre}
         </Badge>
         <div className="flex items-center gap-2">
