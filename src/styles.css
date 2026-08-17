@@ -206,17 +206,17 @@
 }
 
 @utility pill-active {
-  background: var(--gradient-sunset);
+  background: var(--slate);
   color: #ffffff;
-  box-shadow: 0 10px 30px -10px color-mix(in oklab, #f45140 35%, transparent);
+  box-shadow: 0 10px 30px -10px color-mix(in oklab, var(--slate) 45%, transparent);
 }
 
 @utility pill-inactive {
-  background-color: color-mix(in oklab, var(--sunset) 8%, transparent);
-  color: var(--warm);
-  border: 1px solid color-mix(in oklab, var(--sunset) 15%, transparent);
+  background-color: color-mix(in oklab, var(--slate) 8%, transparent);
+  color: var(--slate);
+  border: 1px solid color-mix(in oklab, var(--slate) 20%, transparent);
 
   &:hover {
-    background-color: color-mix(in oklab, var(--sunset) 14%, transparent);
+    background-color: color-mix(in oklab, var(--slate) 16%, transparent);
   }
 }

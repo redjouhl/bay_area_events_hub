@@ -124,7 +124,7 @@ function Index() {
         setGenre("All");
         setQuery("");
       }}
-      className={`rounded-full border px-5 py-2 text-sm font-bold transition-all active:scale-95 ${
+      className={`rounded-full border px-7 py-3 text-base font-bold transition-all active:scale-95 ${
         category === value
           ? "pill-active border-transparent"
           : "pill-inactive"
