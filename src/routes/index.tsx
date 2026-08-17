@@ -156,7 +156,7 @@ function Index() {
             <span className="gradient-text">BEST HAPPENINGS IN THE BAY</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            Concerts, museums, festivals, and more: all in one place.
+            Your next night out, sorted.
           </p>
 
           <div className="group relative mt-8 max-w-xl">
