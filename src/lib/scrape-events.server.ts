@@ -322,7 +322,19 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
 
   // De-duplicate within a single page (same venue/date/artist/category listed twice).
   const seen = new Set<string>();
-  return rows.filter((r) => (seen.has(r.fingerprint) ? false : (seen.add(r.fingerprint), true)));
+  const deduped = rows.filter((r) => (seen.has(r.fingerprint) ? false : (seen.add(r.fingerprint), true)));
+
+  // A multi-night listing often has one photo shared across several dates, but the
+  // model only attaches it to some of the extracted rows. Reuse it for the rest.
+  const imageByArtist = new Map<string, string>();
+  for (const r of deduped) {
+    if (r.image_url && !imageByArtist.has(r.artist)) imageByArtist.set(r.artist, r.image_url);
+  }
+  for (const r of deduped) {
+    if (!r.image_url) r.image_url = imageByArtist.get(r.artist) ?? null;
+  }
+
+  return deduped;
 }
 
 export async function refreshEvents(venueNames?: string[]) {
