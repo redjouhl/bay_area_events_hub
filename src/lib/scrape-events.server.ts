@@ -145,6 +145,16 @@ function fingerprint(venue: string, date: string, artist: string, category: stri
   return `${venue}|${date}|${artist}|${category}`.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
+const PLACEHOLDER_VALUE = /^(none|n\/a|null|tbd)$/i;
+
+// Firecrawl's model sometimes fills empty fields with the literal string
+// "null"/"n/a"/etc. instead of omitting them, so a truthy-check alone lets
+// that string through into the database.
+function cleanValue(value: string | undefined, maxLength: number) {
+  const trimmed = value?.trim();
+  return trimmed && !PLACEHOLDER_VALUE.test(trimmed) ? trimmed.slice(0, maxLength) : null;
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function buildPrompt(venue: VenueSource, todayIso: string) {
@@ -289,16 +299,13 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     .map((e) => ({
       fingerprint: fingerprint(venue.venue, e.date as string, e.artist as string, category),
       artist: (e.artist as string).trim().slice(0, 200),
-      support:
-        e.support && !/^(none|n\/a|null|tbd)$/i.test(e.support.trim())
-          ? e.support.trim().slice(0, 200)
-          : null,
+      support: cleanValue(e.support, 200),
       venue: venue.venue,
       city: venue.city,
       date: e.date as string,
-      time: e.time?.trim().slice(0, 40) || null,
+      time: cleanValue(e.time, 40),
       genre: normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`),
-      price: e.price?.trim().slice(0, 40) || null,
+      price: cleanValue(e.price, 40),
       ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
       source: venue.source,
       category,
