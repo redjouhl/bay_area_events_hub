@@ -59,4 +59,10 @@ Pushing a code change to GitHub does **not** apply pending migrations — that's
 
 Deploys automatically via Netlify whenever `main` is pushed. No manual deploy step needed — commit and push when ready, and the live site updates a few minutes later.
 
-Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access.
+Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access. Also add `FIRECRAWL_API_KEY` there — it's required for the daily event refresh described below.
+
+### Automatic daily event refresh
+
+`netlify/functions/refresh-events-cron.mjs` is a Netlify Scheduled Function that runs once a day (6am Pacific) and POSTs to `/api/public/hooks/refresh-events` to re-scrape every venue. It needs `FIRECRAWL_API_KEY` and `SUPABASE_PUBLISHABLE_KEY` set as Netlify environment variables.
+
+Note: a full scrape of all ~95 venues takes 10+ minutes, which can exceed Netlify's function execution limit. That's not a data-loss risk — the scraper saves each venue's events as it finishes them (not all at once at the end), so a run that gets cut off just means the remaining venues catch up on the next day's run.
