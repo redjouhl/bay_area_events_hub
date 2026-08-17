@@ -103,12 +103,18 @@ function Index() {
     return (flagged.length ? flagged : upcoming).slice(0, 3);
   }, [events, todayPT]);
 
-  const chip = (active: boolean) =>
-    `rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-      active
-        ? "border-primary bg-primary text-primary-foreground"
-        : "border-border bg-secondary text-secondary-foreground hover:border-primary/50"
+  const CHIP_TONES = {
+    amber: { active: "border-transparent bg-amber text-white", hover: "hover:border-amber/50" },
+    accent: { active: "border-transparent bg-accent text-accent-foreground", hover: "hover:border-accent/50" },
+    sunset: { active: "border-transparent bg-sunset text-white", hover: "hover:border-sunset/50" },
+  } as const;
+
+  const chip = (active: boolean, tone: keyof typeof CHIP_TONES = "sunset") => {
+    const t = CHIP_TONES[tone];
+    return `rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+      active ? t.active : `border-border bg-secondary text-secondary-foreground ${t.hover}`
     }`;
+  };
 
   const categoryPill = (value: Category, label: string) => (
     <button
@@ -252,7 +258,7 @@ function Index() {
                 <button
                   key={value}
                   onClick={() => setRange(value)}
-                  className={chip(range === value)}
+                  className={chip(range === value, "amber")}
                 >
                   {label}
                 </button>
@@ -260,22 +266,22 @@ function Index() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setCity("All")} className={chip(city === "All")}>
+              <button onClick={() => setCity("All")} className={chip(city === "All", "accent")}>
                 All cities
               </button>
               {regionNames.map((name) => (
-                <button key={name} onClick={() => setCity(name)} className={chip(city === name)}>
+                <button key={name} onClick={() => setCity(name)} className={chip(city === name, "accent")}>
                   {name}
                 </button>
               ))}
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setGenre("All")} className={chip(genre === "All")}>
+              <button onClick={() => setGenre("All")} className={chip(genre === "All", "sunset")}>
                 {isMuseum ? "All exhibit types" : isClassical || isComedy ? "All types" : "All genres"}
               </button>
               {genreOptions.map((g) => (
-                <button key={g} onClick={() => setGenre(g)} className={chip(genre === g)}>
+                <button key={g} onClick={() => setGenre(g)} className={chip(genre === g, "sunset")}>
                   {g}
                 </button>
               ))}
