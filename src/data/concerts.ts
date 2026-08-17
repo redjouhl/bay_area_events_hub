@@ -11,6 +11,7 @@ export type Concert = {
   genre: string;
   price: string;
   ticketUrl: string;
+  imageUrl?: string;
   source: string;
   trending?: boolean;
   category: EventCategory;

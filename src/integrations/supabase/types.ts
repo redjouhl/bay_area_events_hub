@@ -60,6 +60,7 @@ export type Database = {
           fingerprint: string
           genre: string
           id: string
+          image_url: string | null
           last_seen_at: string
           price: string | null
           raw_data: Json | null
@@ -83,6 +84,7 @@ export type Database = {
           fingerprint: string
           genre?: string
           id?: string
+          image_url?: string | null
           last_seen_at?: string
           price?: string | null
           raw_data?: Json | null
@@ -106,6 +108,7 @@ export type Database = {
           fingerprint?: string
           genre?: string
           id?: string
+          image_url?: string | null
           last_seen_at?: string
           price?: string | null
           raw_data?: Json | null

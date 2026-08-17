@@ -218,7 +218,8 @@ function Index() {
           </section>
         )}
 
-        <div className="mt-10 flex flex-wrap gap-2">
+        <h2 className="mt-16 text-3xl">Browse by category</h2>
+        <div className="mt-5 flex flex-wrap gap-2">
           {categoryPill("classical", "Classical / Symphony")}
           {categoryPill("comedy", "Comedy")}
           {categoryPill("concerts", "Concerts")}

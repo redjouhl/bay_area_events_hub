@@ -201,6 +201,10 @@
   color: transparent;
 }
 
+@utility gradient-surface {
+  background-image: var(--gradient-sunset);
+}
+
 @utility pill-active {
   background: var(--gradient-sunset);
   color: #ffffff;

@@ -47,6 +47,7 @@ type ScrapedEvent = {
   genre?: string;
   price?: string;
   ticketUrl?: string;
+  imageUrl?: string;
 };
 
 const SPORTS = /(soccer|football|basketball|hockey|baseball|wrestl|boxing|\bmma\b|\bufc\b|roller derby|rugby|lacrosse|\bvs\.?\b|oakland roots|golden state warriors|oakland ballers)/i;
@@ -164,6 +165,7 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
       `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
       `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string (e.g. "$25" or "Free") or null, ` +
       `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
+      `Return imageUrl as the absolute URL of the comedian's photo or show poster if one is shown for this listing, or null if there isn't one. ` +
       `Return genre as one of: Stand-Up, Improv, Sketch, Open Mic, Showcase, Storytelling, Comedy Festival. ` +
       `Put the headlining comedian or show title in artist and any featured/supporting comics in support.` +
       (venue.promptHint ? ` ${venue.promptHint}` : "")
@@ -176,6 +178,7 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
       `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
       `Return date as YYYY-MM-DD, time as a readable start time like "7:30 PM", price as a short string (e.g. "$45" or "Free") or null, ` +
       `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
+      `Return imageUrl as the absolute URL of the program or performer photo/artwork if one is shown for this listing, or null if there isn't one. ` +
       `Return genre as one of: Symphony, Opera, Ballet, Chamber Music, Choral, Organ / Sacred, Recital, Contemporary Classical, Family Concert. ` +
       `Put the program or production title in artist and the orchestra, company, conductor, or featured soloist in support.` +
       (venue.promptHint ? ` ${venue.promptHint}` : "")
@@ -191,6 +194,7 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
       `Return time as a readable time like "10:00 AM" or "Open daily" or null. ` +
       `Return genre as the exhibit type (one of: Art, History, Science, Photography, Design, Special Exhibition, Film, Interactive, Family). ` +
       `Return price as a short string (e.g. "$30" or "Free") or null. ticketUrl should be the absolute ticket/visit link (fall back to the page URL). ` +
+      `Return imageUrl as the absolute URL of the exhibition's featured image or artwork if one is shown for this listing, or null if there isn't one. ` +
       `Put the exhibition title in artist and any subtitle, featured artist, or short description in support.` +
       (venue.promptHint ? ` ${venue.promptHint}` : "")
     );
@@ -201,7 +205,8 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
     `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string ` +
     `(e.g. "$35" or "Free") or null, genre as a short music genre, and ticketUrl as the absolute ticket link ` +
-    `(fall back to the page URL). Put the headliner in artist and any opener/tour name in support.` +
+    `(fall back to the page URL). Return imageUrl as the absolute URL of the artist photo or show poster if one is shown for this listing, or null if there isn't one. ` +
+    `Put the headliner in artist and any opener/tour name in support.` +
     (venue.promptHint ? ` ${venue.promptHint}` : "")
   );
 }
@@ -242,6 +247,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
                     genre: { type: "string" },
                     price: { type: "string" },
                     ticketUrl: { type: "string" },
+                    imageUrl: { type: "string" },
                   },
                   required: ["artist", "date"],
                 },
@@ -307,6 +313,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
       genre: normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`),
       price: cleanValue(e.price, 40),
       ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
+      image_url: e.imageUrl?.startsWith("http") ? e.imageUrl : null,
       source: venue.source,
       category,
       last_seen_at: new Date().toISOString(),

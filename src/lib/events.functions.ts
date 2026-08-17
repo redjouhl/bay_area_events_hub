@@ -12,7 +12,7 @@ export const getEvents = createServerFn({ method: "GET" }).handler(async (): Pro
 
   const { data, error } = await supabase
     .from("events")
-    .select("id, artist, support, venue, city, date, time, genre, price, ticket_url, source, trending, category")
+    .select("id, artist, support, venue, city, date, time, genre, price, ticket_url, image_url, source, trending, category")
     .order("date", { ascending: true })
     .limit(1000);
 
@@ -32,6 +32,7 @@ export const getEvents = createServerFn({ method: "GET" }).handler(async (): Pro
     genre: row.genre,
     price: row.price ?? "",
     ticketUrl: row.ticket_url,
+    ...(row.image_url ? { imageUrl: row.image_url } : {}),
     source: row.source,
     trending: row.trending ?? false,
     category: (row.category as "concerts" | "museums_exhibits" | "classical") ?? "concerts",
