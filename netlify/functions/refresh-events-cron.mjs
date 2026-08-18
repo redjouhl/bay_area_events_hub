@@ -1,4 +1,4 @@
-// Netlify Scheduled Function — runs once a day and asks the site's own
+// Netlify Scheduled Function — runs weekly and asks the site's own
 // /api/public/hooks/refresh-events endpoint to re-scrape every venue.
 //
 // Needs FIRECRAWL_API_KEY and SUPABASE_PUBLISHABLE_KEY set as Netlify
@@ -24,6 +24,6 @@ export default async () => {
 };
 
 export const config = {
-  // 6am Pacific, daily.
-  schedule: "0 13 * * *",
+  // 6am Pacific, every Thursday — fresh data ahead of weekend browsing.
+  schedule: "0 13 * * 4",
 };
