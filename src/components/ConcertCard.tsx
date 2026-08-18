@@ -75,7 +75,7 @@ export function ConcertCard({ concert }: { concert: Concert }) {
               aria-label={`Search ${concert.artist} on Spotify`}
               className="rounded-full p-1.5 text-[#1DB954] transition-colors hover:bg-secondary hover:text-[#169c46]"
             >
-              <SpotifyIcon className="h-4 w-4" />
+              <SpotifyIcon className="h-5 w-5" />
             </a>
           )}
           <button
