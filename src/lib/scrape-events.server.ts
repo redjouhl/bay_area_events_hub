@@ -156,6 +156,23 @@ function cleanValue(value: string | undefined, maxLength: number) {
   return trimmed && !PLACEHOLDER_VALUE.test(trimmed) ? trimmed.slice(0, maxLength) : null;
 }
 
+const PLACEHOLDER_IMAGE_HOST = /(^|\.)example\.(com|org|net)$/i;
+
+// Upgrade http -> https (the page renders over https, so an http image is
+// silently blocked as mixed content) and drop placeholder hosts the model
+// sometimes hallucinates (e.g. example.com) when it can't find a real image.
+function cleanImageUrl(raw: string | undefined) {
+  const trimmed = raw?.trim();
+  if (!trimmed || !/^https?:\/\//i.test(trimmed)) return null;
+  const httpsUrl = trimmed.replace(/^http:\/\//i, "https://");
+  try {
+    if (PLACEHOLDER_IMAGE_HOST.test(new URL(httpsUrl).hostname)) return null;
+  } catch {
+    return null;
+  }
+  return httpsUrl;
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function buildPrompt(venue: VenueSource, todayIso: string) {
@@ -314,7 +331,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
       genre: normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`),
       price: cleanValue(e.price, 40),
       ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
-      image_url: e.imageUrl?.startsWith("http") ? e.imageUrl : null,
+      image_url: cleanImageUrl(e.imageUrl),
       source: venue.source,
       category,
       last_seen_at: new Date().toISOString(),
