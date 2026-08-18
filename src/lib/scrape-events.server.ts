@@ -156,6 +156,19 @@ function cleanValue(value: string | undefined, maxLength: number) {
   return trimmed && !PLACEHOLDER_VALUE.test(trimmed) ? trimmed.slice(0, maxLength) : null;
 }
 
+// Some venue pages list everything in caps. Only touch names that are fully
+// uppercase (a formatting artifact) — anything already mixed-case (e.g.
+// "Bobby McFerrin") or fully lowercase (some artists are genuinely styled
+// that way, e.g. "aespa") is left exactly as scraped.
+function toTitleCase<T extends string | null>(value: T): T {
+  if (!value || value !== value.toUpperCase()) return value;
+  return value
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+    .replace(/'S\b/g, "'s")
+    .replace(/\bMc([a-z])/g, (_, c) => `Mc${c.toUpperCase()}`) as T;
+}
+
 const PLACEHOLDER_IMAGE_HOST = /(^|\.)example\.(com|org|net)$/i;
 
 // Upgrade http -> https (the page renders over https, so an http image is
@@ -322,8 +335,8 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     .filter((e) => !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))
     .map((e) => ({
       fingerprint: fingerprint(venue.venue, e.date as string, e.artist as string, category),
-      artist: (e.artist as string).trim().slice(0, 200),
-      support: cleanValue(e.support, 200),
+      artist: toTitleCase((e.artist as string).trim().slice(0, 200)),
+      support: toTitleCase(cleanValue(e.support, 200)),
       venue: venue.venue,
       city: venue.city,
       date: e.date as string,
