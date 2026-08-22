@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarIcon, Search } from "lucide-react";
+import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search } from "lucide-react";
 import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
 import { getEvents } from "@/lib/events.functions";
 import { getRegions } from "@/lib/regions.functions";
+import { getVenueCoordinates } from "@/lib/venues.functions";
 import { ConcertCard, ConcertCardSkeleton } from "@/components/ConcertCard";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,21 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pacificToday, weekRange, weekendRange, next7Range, next30Range } from "@/lib/date-ranges";
+
+// Leaflet touches the DOM at import time, so it's loaded lazily and only
+// ever rendered client-side (view starts as "list", so this never enters
+// the tree during SSR).
+const EventsMap = lazy(() => import("@/components/EventsMap").then((m) => ({ default: m.EventsMap })));
+
+function haversineMiles(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 3958.8;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
 
 const TITLE = "BEST HAPPENINGS IN THE BAY | Happenly";
 const DESCRIPTION =
@@ -33,7 +49,7 @@ export const Route = createFileRoute("/")({
 });
 
 type DateRange = "all" | "today" | "throughSunday" | "weekend" | "week" | "month";
-type SortOption = "chronological" | "priceLowHigh" | "priceHighLow";
+type SortOption = "chronological" | "priceLowHigh" | "priceHighLow" | "distance";
 type Category = "all" | "classical" | "comedy" | "concerts" | "family" | "free" | "museums_exhibits" | "other" | "theater";
 
 const FALLBACK_REGIONS: Record<string, string[]> = {
@@ -52,6 +68,10 @@ function Index() {
   const [sortBy, setSortBy] = useState<SortOption>("chronological");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [category, setCategory] = useState<Category>("concerts");
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const { data: liveEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ["events"],
@@ -63,6 +83,37 @@ function Index() {
     queryFn: () => getRegions(),
     staleTime: 60 * 60 * 1000,
   });
+  const { data: venueCoords } = useQuery({
+    queryKey: ["venue-coordinates"],
+    queryFn: () => getVenueCoordinates(),
+    staleTime: 60 * 60 * 1000,
+    enabled: viewMode === "map" || sortBy === "distance",
+  });
+  const venueCoordByName = useMemo(() => {
+    const m = new Map<string, { lat: number; lng: number }>();
+    for (const v of venueCoords ?? []) m.set(v.name, { lat: v.lat, lng: v.lng });
+    return m;
+  }, [venueCoords]);
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      setLocationError("Your browser doesn't support location.");
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocationError("Couldn't get your location — check your browser's location permission.");
+        setLocating(false);
+      },
+      { timeout: 10_000 },
+    );
+  }
   const REGIONS = useMemo(() => {
     if (!regionRows?.length) return FALLBACK_REGIONS;
     return Object.fromEntries(regionRows.map((r) => [r.name, r.cities]));
@@ -115,9 +166,39 @@ function Index() {
           if (pb === null) return -1;
           return sortBy === "priceLowHigh" ? pa - pb : pb - pa;
         }
+        if (sortBy === "distance" && userLocation) {
+          const ca = venueCoordByName.get(a.venue);
+          const cb = venueCoordByName.get(b.venue);
+          const da = ca ? haversineMiles(userLocation, ca) : null;
+          const db = cb ? haversineMiles(userLocation, cb) : null;
+          if (da === null && db === null) return a.date.localeCompare(b.date);
+          if (da === null) return 1;
+          if (db === null) return -1;
+          return da - db;
+        }
         return a.date.localeCompare(b.date);
       });
-  }, [events, REGIONS, query, city, genre, sortBy, range, specificDate, todayPT, wkStart, wkEnd, weekStart, weekEnd, n7Start, n7End, n30Start, n30End]);
+  }, [
+    events,
+    REGIONS,
+    query,
+    city,
+    genre,
+    sortBy,
+    range,
+    specificDate,
+    todayPT,
+    wkStart,
+    wkEnd,
+    weekStart,
+    weekEnd,
+    n7Start,
+    n7End,
+    n30Start,
+    n30End,
+    userLocation,
+    venueCoordByName,
+  ]);
 
   const trending = useMemo(() => {
     const upcoming = events
@@ -405,20 +486,73 @@ function Index() {
                 <p className="text-sm uppercase tracking-widest text-muted-foreground">
                   {results.length} {results.length === 1 ? (isMuseum ? "exhibit" : "show") : isMuseum ? "exhibits" : "shows"}
                 </p>
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                  <SelectTrigger className="h-9 w-[190px] text-sm">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="chronological">Date: Soonest first</SelectItem>
-                    <SelectItem value="priceLowHigh">Price: Low to high</SelectItem>
-                    <SelectItem value="priceHighLow">Price: High to low</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 gap-1.5 text-sm"
+                    onClick={useMyLocation}
+                    disabled={locating}
+                  >
+                    <LocateFixed className="h-4 w-4" />
+                    {locating ? "Locating…" : userLocation ? "Location set" : "Use my location"}
+                  </Button>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(v) => {
+                      setSortBy(v as SortOption);
+                      if (v === "distance" && !userLocation) useMyLocation();
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-[190px] text-sm">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chronological">Date: Soonest first</SelectItem>
+                      <SelectItem value="priceLowHigh">Price: Low to high</SelectItem>
+                      <SelectItem value="priceHighLow">Price: High to low</SelectItem>
+                      <SelectItem value="distance">Distance: Nearest first</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center rounded-full border border-border p-0.5">
+                    <button
+                      onClick={() => setViewMode("list")}
+                      aria-label="List view"
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <List className="h-4 w-4" /> List
+                    </button>
+                    <button
+                      onClick={() => setViewMode("map")}
+                      aria-label="Map view"
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        viewMode === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <MapIcon className="h-4 w-4" /> Map
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {eventsLoading ? (
+            {locationError && <p className="mt-2 text-sm text-destructive">{locationError}</p>}
+
+            {!eventsLoading && viewMode === "map" ? (
+              <div className="mt-6">
+                <Suspense
+                  fallback={
+                    <div className="flex h-[600px] w-full items-center justify-center rounded-2xl border border-border text-muted-foreground">
+                      Loading map…
+                    </div>
+                  }
+                >
+                  <EventsMap events={results} venueCoords={venueCoords ?? []} userLocation={userLocation} />
+                </Suspense>
+              </div>
+            ) : eventsLoading ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <ConcertCardSkeleton key={i} />
