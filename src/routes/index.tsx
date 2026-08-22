@@ -286,14 +286,14 @@ function Index() {
       <div className="sticky top-0 z-20 border-y border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl snap-x flex-nowrap items-center justify-between gap-1.5 overflow-x-auto px-4 py-3 sm:justify-center sm:gap-2">
           {categoryPill("all", "All")}
-          {categoryPill("concerts", "Concerts")}
-          {categoryPill("comedy", "Comedy")}
-          {categoryPill("theater", "Theater")}
           {categoryPill("classical", "Classical")}
-          {categoryPill("museums_exhibits", "Museums")}
-          {categoryPill("free", "Free")}
+          {categoryPill("comedy", "Comedy")}
+          {categoryPill("concerts", "Concerts")}
           {categoryPill("family", "Family")}
+          {categoryPill("free", "Free")}
+          {categoryPill("museums_exhibits", "Museums")}
           {categoryPill("other", "Other")}
+          {categoryPill("theater", "Theater")}
         </div>
       </div>
 
