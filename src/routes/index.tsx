@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search } from "lucide-react";
-import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
+import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search, TicketX } from "lucide-react";
+import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, isSoldOut, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
 import { getEvents } from "@/lib/events.functions";
 import { getRegions } from "@/lib/regions.functions";
 import { getVenueCoordinates } from "@/lib/venues.functions";
@@ -72,6 +72,7 @@ function Index() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [hideSoldOut, setHideSoldOut] = useState(false);
 
   const { data: liveEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ["events"],
@@ -144,6 +145,7 @@ function Index() {
           if (regionCities ? !regionCities.includes(c.city) : c.city !== city) return false;
         }
         if (genre !== "All" && c.genre !== genre) return false;
+        if (hideSoldOut && isSoldOut(c)) return false;
         if (q) {
           const hay = `${c.artist} ${c.support ?? ""} ${c.venue} ${c.city} ${c.genre}`.toLowerCase();
           if (!hay.includes(q)) return false;
@@ -184,6 +186,7 @@ function Index() {
     query,
     city,
     genre,
+    hideSoldOut,
     sortBy,
     range,
     specificDate,
@@ -487,6 +490,16 @@ function Index() {
                   {results.length} {results.length === 1 ? (isMuseum ? "exhibit" : "show") : isMuseum ? "exhibits" : "shows"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant={hideSoldOut ? "default" : "secondary"}
+                    size="sm"
+                    className="h-9 gap-1.5 text-sm"
+                    onClick={() => setHideSoldOut((v) => !v)}
+                    aria-pressed={hideSoldOut}
+                  >
+                    <TicketX className="h-4 w-4" />
+                    Hide sold out
+                  </Button>
                   <Button
                     variant="secondary"
                     size="sm"

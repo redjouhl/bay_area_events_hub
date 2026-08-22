@@ -24,6 +24,10 @@ export function isFreeEvent(concert: Pick<Concert, "price">) {
   return /^free$|no cover/i.test(concert.price.trim());
 }
 
+export function isSoldOut(concert: Pick<Concert, "price">) {
+  return /sold out/i.test(concert.price.trim());
+}
+
 const FAMILY_GENRES = new Set(["Children", "Family", "Family Concert"]);
 
 export function isFamilyFriendly(concert: Pick<Concert, "genre">) {

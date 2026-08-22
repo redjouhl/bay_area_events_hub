@@ -313,7 +313,8 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
           type: "json",
           prompt:
             buildPrompt(venue, todayIso) +
-            ` If this page has no real, dated events actually listed (e.g. it's a nav menu, a ministry/about page, or an empty calendar template), return an empty events array. Never invent a plausible-sounding event that isn't explicitly on the page.`,
+            ` If this page has no real, dated events actually listed (e.g. it's a nav menu, a ministry/about page, or an empty calendar template), return an empty events array. Never invent a plausible-sounding event that isn't explicitly on the page.` +
+            ` If a listing is explicitly marked as sold out on the page, return price as exactly "Sold Out" for that listing (still include it — don't drop it).`,
           schema: {
             type: "object",
             properties: {

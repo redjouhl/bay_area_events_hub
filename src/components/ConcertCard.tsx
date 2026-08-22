@@ -1,7 +1,7 @@
 import { useState, type SVGProps } from "react";
 import { CalendarDays, MapPin, Ticket, Flame, Heart, Building2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { isFreeEvent, type Concert } from "@/data/concerts";
+import { isFreeEvent, isSoldOut, type Concert } from "@/data/concerts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -85,6 +85,7 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
   const saved = isFavorite(concert.id);
   const isMuseum = concert.category === "museums_exhibits";
   const isFree = isFreeEvent(concert);
+  const soldOut = isSoldOut(concert);
   const showSpotify = concert.category === "concerts" || concert.category === "classical";
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = concert.imageUrl && !imageFailed;
@@ -92,6 +93,11 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
   if (compact) {
     return (
       <article className="gradient-surface group relative flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-transparent p-3 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-64">
+        {soldOut && (
+          <span className="absolute left-2 top-2 z-10 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-destructive-foreground shadow-sm">
+            Sold Out
+          </span>
+        )}
         <div className="-mx-3 -mt-3 mb-3 aspect-[16/9] overflow-hidden">
           {showImage ? (
             <img
@@ -143,10 +149,14 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
           <Button
             asChild
             size="sm"
-            className="h-8 shrink-0 bg-white px-3 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-white/90"
+            className={`h-8 shrink-0 px-3 text-xs font-semibold uppercase tracking-wide ${
+              soldOut
+                ? "bg-white/20 text-white hover:bg-white/30"
+                : "bg-white text-foreground hover:bg-white/90"
+            }`}
           >
             <a href={concert.ticketUrl} target="_blank" rel="noopener noreferrer">
-              {isFree ? "Info" : isMuseum ? "Visit" : "Tickets"}
+              {soldOut ? "Sold Out" : isFree ? "Info" : isMuseum ? "Visit" : "Tickets"}
             </a>
           </Button>
         </div>
@@ -156,6 +166,11 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sunset/30 hover:shadow-lg hover:shadow-sunset/5">
+      {soldOut && (
+        <span className="absolute left-3 top-3 z-10 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-destructive-foreground shadow-sm">
+          Sold Out
+        </span>
+      )}
       <div className="-mx-5 -mt-5 mb-4 aspect-[16/9] overflow-hidden">
         {showImage ? (
           <img
@@ -239,9 +254,14 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
           <p className="text-display text-2xl text-foreground break-words">{concert.price}</p>
           <p className="text-xs text-muted-foreground">via {concert.source}</p>
         </div>
-        <Button asChild size="sm" className="font-semibold uppercase tracking-wide">
+        <Button
+          asChild
+          size="sm"
+          variant={soldOut ? "secondary" : "default"}
+          className="font-semibold uppercase tracking-wide"
+        >
           <a href={concert.ticketUrl} target="_blank" rel="noopener noreferrer">
-            <Ticket className="mr-1 h-4 w-4" /> {isFree ? "Event Info" : isMuseum ? "Visit" : "Tickets"}
+            <Ticket className="mr-1 h-4 w-4" /> {soldOut ? "Sold Out" : isFree ? "Event Info" : isMuseum ? "Visit" : "Tickets"}
           </a>
         </Button>
       </div>
