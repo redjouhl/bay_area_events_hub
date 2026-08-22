@@ -94,7 +94,7 @@ function shareLinks(concert: Concert) {
 
 async function copyShareLink(concert: Concert) {
   try {
-    await navigator.clipboard.writeText(shareLinks(concert).combined);
+    await navigator.clipboard.writeText(eventPageUrl(concert));
     toast.success("Link copied to clipboard");
   } catch {
     toast.error("Couldn't copy link");
