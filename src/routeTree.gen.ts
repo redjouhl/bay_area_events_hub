@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedForYouRouteImport } from './routes/_authenticated/for-you'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
+import { Route as EventsEventIdRouteImport } from './routes/events/$eventId'
 import { Route as ApiPublicHooksRefreshEventsRouteImport } from './routes/api/public/hooks/refresh-events'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const AuthenticatedPreferencesRoute =
     path: '/preferences',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRefreshEventsRoute =
   ApiPublicHooksRefreshEventsRouteImport.update({
     id: '/api/public/hooks/refresh-events',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/for-you': typeof AuthenticatedForYouRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/public/hooks/refresh-events': typeof ApiPublicHooksRefreshEventsRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/for-you': typeof AuthenticatedForYouRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/public/hooks/refresh-events': typeof ApiPublicHooksRefreshEventsRoute
 }
 export interface FileRoutesById {
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/for-you': typeof AuthenticatedForYouRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/api/public/hooks/refresh-events': typeof ApiPublicHooksRefreshEventsRoute
 }
 export interface FileRouteTypes {
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/for-you'
     | '/preferences'
+    | '/events/$eventId'
     | '/api/public/hooks/refresh-events'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/for-you'
     | '/preferences'
+    | '/events/$eventId'
     | '/api/public/hooks/refresh-events'
   id:
     | '__root__'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/for-you'
     | '/_authenticated/preferences'
+    | '/events/$eventId'
     | '/api/public/hooks/refresh-events'
   fileRoutesById: FileRoutesById
 }
@@ -112,6 +124,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  EventsEventIdRoute: typeof EventsEventIdRoute
   ApiPublicHooksRefreshEventsRoute: typeof ApiPublicHooksRefreshEventsRoute
 }
 
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPreferencesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-events': {
       id: '/api/public/hooks/refresh-events'
       path: '/api/public/hooks/refresh-events'
@@ -188,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  EventsEventIdRoute: EventsEventIdRoute,
   ApiPublicHooksRefreshEventsRoute: ApiPublicHooksRefreshEventsRoute,
 }
 export const routeTree = rootRouteImport

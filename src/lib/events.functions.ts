@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import type { Concert } from "@/data/concerts";
 
@@ -38,3 +39,38 @@ export const getEvents = createServerFn({ method: "GET" }).handler(async (): Pro
     category: (row.category as "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "sports" | "other") ?? "concerts",
   }));
 });
+
+export const getEventById = createServerFn({ method: "GET" })
+  .inputValidator((id: unknown) => z.string().uuid().parse(id))
+  .handler(async ({ data: id }): Promise<Concert | null> => {
+    const supabase = createClient<Database>(
+      process.env["SUPABASE_URL"]!,
+      process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"]!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("id, artist, support, venue, city, date, time, genre, price, ticket_url, image_url, source, trending, category")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      artist: data.artist,
+      ...(data.support ? { support: data.support } : {}),
+      venue: data.venue,
+      city: data.city,
+      date: data.date,
+      time: data.time ?? "",
+      genre: data.genre,
+      price: data.price ?? "",
+      ticketUrl: data.ticket_url,
+      ...(data.image_url ? { imageUrl: data.image_url } : {}),
+      source: data.source,
+      trending: data.trending ?? false,
+      category: (data.category as Concert["category"]) ?? "concerts",
+    };
+  });

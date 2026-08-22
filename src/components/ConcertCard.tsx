@@ -19,7 +19,7 @@ function formatDate(iso: string) {
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-function formatDateLabel(dates: string[]) {
+export function formatDateLabel(dates: string[]) {
   const sorted = [...dates].sort();
   if (sorted.length === 1) return formatDate(sorted[0]!);
 
@@ -71,12 +71,19 @@ function InstagramIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function eventPageUrl(concert: Pick<Concert, "id">) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/events/${concert.id}`;
+}
+
 // Builds the shareable channel links for one event. mailto:/sms:/wa.me all
 // take plain query params, so the same summary text is reused across each.
+// The link points back to the event's page on Happenly (not the external
+// ticket link) so the person you share with lands on our site first.
 function shareLinks(concert: Concert) {
   const dateLabel = formatDateLabel(concert.dates?.length ? concert.dates : [concert.date]);
   const summary = `${concert.artist} at ${concert.venue}, ${concert.city} on ${dateLabel}`;
-  const combined = `${summary}\n${concert.ticketUrl}`;
+  const combined = `${summary}\n${eventPageUrl(concert)}`;
   return {
     combined,
     whatsapp: `https://wa.me/?text=${encodeURIComponent(combined)}`,
@@ -145,6 +152,27 @@ function ShareMenuItems({ concert }: { concert: Concert }) {
   );
 }
 
+export function ShareButton({ concert, compact = false }: { concert: Concert; compact?: boolean }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Share this show"
+          className={
+            compact
+              ? "rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+              : "rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-accent"
+          }
+        >
+          <Share2 className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
+        </button>
+      </DropdownMenuTrigger>
+      <ShareMenuItems concert={concert} />
+    </DropdownMenu>
+  );
+}
+
 export function ConcertCardSkeleton({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
@@ -209,18 +237,7 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
             {concert.genre}
           </Badge>
           <div className="flex items-center gap-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="Share this show"
-                  className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                </button>
-              </DropdownMenuTrigger>
-              <ShareMenuItems concert={concert} />
-            </DropdownMenu>
+            <ShareButton concert={concert} compact />
             <button
               type="button"
               aria-label={saved ? "Remove from favorites" : "Save this show"}
@@ -312,18 +329,7 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
               <SpotifyIcon className="h-5 w-5" />
             </a>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Share this show"
-                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-accent"
-              >
-                <Share2 className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <ShareMenuItems concert={concert} />
-          </DropdownMenu>
+          <ShareButton concert={concert} />
           <button
             type="button"
             aria-label={saved ? "Remove from favorites" : "Save this show"}
