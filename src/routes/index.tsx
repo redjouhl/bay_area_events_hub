@@ -360,7 +360,7 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 pb-24 pt-8">
         {!query.trim() && (
           <section aria-labelledby="trending">
             <h2 id="trending" className="text-3xl">
@@ -601,7 +601,7 @@ function Index() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-10">
+      <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 text-sm text-muted-foreground">
           <p>
             Don’t see your event or venue?{" "}
