@@ -1,6 +1,7 @@
 import { useState, type SVGProps } from "react";
-import { CalendarDays, MapPin, Ticket, Flame, Heart, Building2 } from "lucide-react";
+import { CalendarDays, MapPin, Ticket, Flame, Heart, Building2, Share2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { isFreeEvent, isSoldOut, type Concert } from "@/data/concerts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,28 @@ function SpotifyIcon(props: SVGProps<SVGSVGElement>) {
 
 function spotifySearchUrl(query: string) {
   return `https://open.spotify.com/search/${encodeURIComponent(query)}`;
+}
+
+async function shareEvent(concert: Concert) {
+  const dateLabel = formatDateLabel(concert.dates?.length ? concert.dates : [concert.date]);
+  const text = `${concert.artist} at ${concert.venue}, ${concert.city} on ${dateLabel}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: concert.artist, text, url: concert.ticketUrl });
+      return;
+    } catch (err) {
+      if ((err as Error)?.name === "AbortError") return;
+      // Any other failure (e.g. permission denied) falls through to the clipboard copy below.
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${text}\n${concert.ticketUrl}`);
+    toast.success("Link copied to clipboard");
+  } catch {
+    toast.error("Couldn't copy link");
+  }
 }
 
 function initials(name: string) {
@@ -118,15 +141,25 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
           <Badge variant="secondary" className="border-transparent bg-amber text-[10px] uppercase tracking-wider text-foreground shadow-sm">
             {concert.genre}
           </Badge>
-          <button
-            type="button"
-            aria-label={saved ? "Remove from favorites" : "Save this show"}
-            aria-pressed={saved}
-            onClick={() => (canFavorite ? toggleFavorite(concert.id) : navigate({ to: "/auth" }))}
-            className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-          >
-            <Heart className={`h-3.5 w-3.5 ${saved ? "fill-white text-white" : ""}`} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Share this show"
+              onClick={() => shareEvent(concert)}
+              className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              aria-label={saved ? "Remove from favorites" : "Save this show"}
+              aria-pressed={saved}
+              onClick={() => (canFavorite ? toggleFavorite(concert.id) : navigate({ to: "/auth" }))}
+              className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+            >
+              <Heart className={`h-3.5 w-3.5 ${saved ? "fill-white text-white" : ""}`} />
+            </button>
+          </div>
         </div>
 
         <h3 className="mt-2 line-clamp-1 text-lg leading-tight text-white">{concert.artist}</h3>
@@ -208,6 +241,14 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
               <SpotifyIcon className="h-5 w-5" />
             </a>
           )}
+          <button
+            type="button"
+            aria-label="Share this show"
+            onClick={() => shareEvent(concert)}
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-accent"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
           <button
             type="button"
             aria-label={saved ? "Remove from favorites" : "Save this show"}
