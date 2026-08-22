@@ -604,11 +604,11 @@ function Index() {
       <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 py-3 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 text-sm text-muted-foreground">
           <p>
-            Don’t see your event or venue? Email{" "}
+            Know a show, venue, or community event we’re missing? Everyone’s welcome to send it our way at{" "}
             <a href="mailto:info@happenly.app" className="text-primary underline decoration-primary/50 underline-offset-4 hover:text-primary/90">
               info@happenly.app
             </a>
-            {" "}and we’ll add it!
+            {" "}and we’ll get it added!
           </p>
         </div>
       </footer>
