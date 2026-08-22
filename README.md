@@ -35,6 +35,16 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 Get these from the Supabase dashboard for this project: **Project Settings → API** (URL and publishable/anon key), and reveal the service role key in the same section. The `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` pair and the `VITE_`-prefixed pair should be the same values — the `VITE_` versions are what the browser bundle uses, the plain versions are read server-side.
 
+### Populating events
+
+The `venues` table only stores scrape targets (venue name + calendar URL) — the shows people actually see come from `events`, which is populated by scraping each venue's calendar page. That scraper (`src/lib/scrape-events.server.ts`) calls the [Firecrawl](https://firecrawl.dev) API directly, so it needs one more `.env` var:
+
+```
+FIRECRAWL_API_KEY=
+```
+
+Get a key at firecrawl.dev. Trigger a scrape by POSTing to `/api/public/hooks/refresh-events` with an `apikey` header set to your `SUPABASE_PUBLISHABLE_KEY` (optionally with a JSON body `{ "venues": ["Venue Name", ...] }` to scrape a subset). Without `FIRECRAWL_API_KEY` set, `events` stays empty and the homepage falls back to the hardcoded placeholder data in `src/data/concerts.ts`.
+
 ### Testing a production build locally
 
 Since some issues only show up in a full build (not the dev server), it's worth running the real build before pushing:
