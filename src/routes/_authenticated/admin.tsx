@@ -11,7 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { amIAdmin, listVenues, saveVenue, deleteVenue, importVenues, type AdminVenue } from "@/lib/admin.functions";
+import {
+  amIAdmin,
+  listVenues,
+  saveVenue,
+  deleteVenue,
+  importVenues,
+  listUpcomingEvents,
+  setEventTrending,
+  type AdminVenue,
+  type AdminEvent,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -78,16 +88,49 @@ function AdminPage() {
   const save = useServerFn(saveVenue);
   const remove = useServerFn(deleteVenue);
   const bulkImport = useServerFn(importVenues);
+  const fetchEvents = useServerFn(listUpcomingEvents);
+  const toggleTrending = useServerFn(setEventTrending);
 
   const admin = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin() });
+  const [view, setView] = useState<"venues" | "trending">("venues");
   const venues = useQuery({
     queryKey: ["admin-venues"],
     queryFn: () => fetchVenues(),
     enabled: admin.data === true,
   });
+  const events = useQuery({
+    queryKey: ["admin-events"],
+    queryFn: () => fetchEvents(),
+    enabled: admin.data === true && view === "trending",
+  });
 
   const [search, setSearch] = useState("");
+  const [eventSearch, setEventSearch] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
+
+  const trendingMut = useMutation({
+    mutationFn: (v: { id: string; trending: boolean }) => toggleTrending({ data: v }),
+    onMutate: async ({ id, trending }) => {
+      await qc.cancelQueries({ queryKey: ["admin-events"] });
+      const prev = qc.getQueryData<AdminEvent[]>(["admin-events"]);
+      qc.setQueryData<AdminEvent[]>(["admin-events"], (old) =>
+        old?.map((e) => (e.id === id ? { ...e, trending } : e)),
+      );
+      return { prev };
+    },
+    onError: (e: Error, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["admin-events"], ctx.prev);
+      toast.error(e.message);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["events"] }),
+  });
+
+  const eventRows = useMemo(() => {
+    const q = eventSearch.trim().toLowerCase();
+    const list = events.data ?? [];
+    if (!q) return list;
+    return list.filter((e) => [e.artist, e.venue, e.city, e.category].some((f) => f.toLowerCase().includes(q)));
+  }, [events.data, eventSearch]);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-venues"] });
 
@@ -199,105 +242,178 @@ function AdminPage() {
     <Shell>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-display text-3xl tracking-wide">Venue admin</h1>
+          <h1 className="text-display text-3xl tracking-wide">{view === "venues" ? "Venue admin" : "Trending events"}</h1>
           <p className="text-sm text-muted-foreground">
-            {venues.data?.length ?? 0} venues in the catalog. Changes take effect on the next scrape.
+            {view === "venues"
+              ? `${venues.data?.length ?? 0} venues in the catalog. Changes take effect on the next scrape.`
+              : `Pick which upcoming shows appear in "Trending this weekend" on the homepage.`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
-            <Plus className="mr-1 h-4 w-4" /> Add venue
-          </Button>
-          <Button size="sm" variant="secondary" asChild>
-            <label className="cursor-pointer">
-              <Upload className="mr-1 h-4 w-4" /> Import CSV
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }}
-              />
-            </label>
-          </Button>
-          <Button size="sm" variant="secondary" onClick={exportCsv}>
-            <Download className="mr-1 h-4 w-4" /> Export CSV
-          </Button>
-        </div>
+        {view === "venues" && (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setDraft({ ...emptyDraft })}>
+              <Plus className="mr-1 h-4 w-4" /> Add venue
+            </Button>
+            <Button size="sm" variant="secondary" asChild>
+              <label className="cursor-pointer">
+                <Upload className="mr-1 h-4 w-4" /> Import CSV
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }}
+                />
+              </label>
+            </Button>
+            <Button size="sm" variant="secondary" onClick={exportCsv}>
+              <Download className="mr-1 h-4 w-4" /> Export CSV
+            </Button>
+          </div>
+        )}
       </div>
 
-      <Input
-        placeholder="Search venues, cities, sources…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mt-6 max-w-md"
-      />
-
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Venue</th>
-              <th className="px-4 py-3">City</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3">Source</th>
-              <th className="px-4 py-3">Last scraped</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((v: AdminVenue) => (
-              <tr key={v.id} className="border-t border-border/60">
-                <td className="px-4 py-3 font-medium">
-                  {v.name}
-                  {!v.active && <Badge variant="secondary" className="ml-2">paused</Badge>}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{v.city}</td>
-                <td className="px-4 py-3 text-muted-foreground">{v.category}</td>
-                <td className="px-4 py-3">
-                  <a href={v.source_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                    {v.source_name}
-                  </a>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {v.last_scraped_at ? new Date(v.last_scraped_at).toLocaleDateString() : "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() =>
-                        setDraft({
-                          id: v.id,
-                          name: v.name,
-                          city: v.city,
-                          category: v.category,
-                          source_url: v.source_url,
-                          source_name: v.source_name,
-                          prompt_hint: v.prompt_hint ?? "",
-                          active: v.active,
-                        })
-                      }
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => { if (confirm(`Delete ${v.name}?`)) deleteMut.mutate(v.id); }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {!rows.length && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No venues match.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mt-6 flex gap-2 border-b border-border">
+        <button
+          onClick={() => setView("venues")}
+          className={`border-b-2 px-1 pb-2 text-sm font-semibold ${view === "venues" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          Venues
+        </button>
+        <button
+          onClick={() => setView("trending")}
+          className={`border-b-2 px-1 pb-2 text-sm font-semibold ${view === "trending" ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+        >
+          Trending
+        </button>
       </div>
+
+      {view === "venues" && (
+        <>
+          <Input
+            placeholder="Search venues, cities, sources…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mt-6 max-w-md"
+          />
+
+          <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">Venue</th>
+                  <th className="px-4 py-3">City</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Source</th>
+                  <th className="px-4 py-3">Last scraped</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((v: AdminVenue) => (
+                  <tr key={v.id} className="border-t border-border/60">
+                    <td className="px-4 py-3 font-medium">
+                      {v.name}
+                      {!v.active && <Badge variant="secondary" className="ml-2">paused</Badge>}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{v.city}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{v.category}</td>
+                    <td className="px-4 py-3">
+                      <a href={v.source_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {v.source_name}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {v.last_scraped_at ? new Date(v.last_scraped_at).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() =>
+                            setDraft({
+                              id: v.id,
+                              name: v.name,
+                              city: v.city,
+                              category: v.category,
+                              source_url: v.source_url,
+                              source_name: v.source_name,
+                              prompt_hint: v.prompt_hint ?? "",
+                              active: v.active,
+                            })
+                          }
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => { if (confirm(`Delete ${v.name}?`)) deleteMut.mutate(v.id); }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!rows.length && (
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No venues match.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {view === "trending" && (
+        <>
+          <Input
+            placeholder="Search upcoming events by artist, venue, city…"
+            value={eventSearch}
+            onChange={(e) => setEventSearch(e.target.value)}
+            className="mt-6 max-w-md"
+          />
+
+          <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">Artist / show</th>
+                  <th className="px-4 py-3">Venue</th>
+                  <th className="px-4 py-3">City</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Trending</th>
+                </tr>
+              </thead>
+              <tbody>
+                {eventRows.map((e: AdminEvent) => (
+                  <tr key={e.id} className="border-t border-border/60">
+                    <td className="px-4 py-3 font-medium">{e.artist}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{e.venue}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{e.city}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{new Date(`${e.date}T12:00:00`).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{e.category}</td>
+                    <td className="px-4 py-3">
+                      <Switch
+                        checked={e.trending}
+                        onCheckedChange={(v) => trendingMut.mutate({ id: e.id, trending: v })}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {!eventRows.length && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      {events.isLoading ? "Loading events…" : "No upcoming events match."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       <Dialog open={draft !== null} onOpenChange={(o) => !o && setDraft(null)}>
         <DialogContent>

@@ -1,6 +1,6 @@
 import { VENUE_SOURCES, type VenueSource } from "@/data/venues";
 
-const GATEWAY = "https://connector-gateway.lovable.dev/firecrawl/v2";
+const GATEWAY = "https://api.firecrawl.dev/v2";
 
 const ALLOWED_GENRES = [
   "Indie",
@@ -12,7 +12,9 @@ const ALLOWED_GENRES = [
   "Latin",
   "Punk",
   "Soul / R&B",
+  "World Music",
   "Children",
+  "Other",
 ] as const;
 
 const ALLOWED_MUSEUM_TYPES = [
@@ -37,6 +39,7 @@ const ALLOWED_CLASSICAL_TYPES = [
   "Recital",
   "Contemporary Classical",
   "Family Concert",
+  "Other",
 ] as const;
 
 type ScrapedEvent = {
@@ -51,7 +54,9 @@ type ScrapedEvent = {
 };
 
 const SPORTS = /(soccer|football|basketball|hockey|baseball|wrestl|boxing|\bmma\b|\bufc\b|roller derby|rugby|lacrosse|\bvs\.?\b|oakland roots|golden state warriors|oakland ballers)/i;
-const CHILDREN = /(story ?time|kids|children|family show|toddler|baby|preschool|puppet|sing[- ]?along for kids)/i;
+// "baby" alone is deliberately excluded: too many real artist names contain
+// it (e.g. rap acts) and would false-positive into the Children genre.
+const CHILDREN = /(story ?time|kids|children|family show|toddler|preschool|puppet|sing[- ]?along for kids|for babies)/i;
 
 function normalizeGenre(raw?: string, title?: string) {
   const text = `${title ?? ""} ${raw ?? ""}`;
@@ -67,8 +72,10 @@ function normalizeGenre(raw?: string, title?: string) {
   if (g.includes("soul") || g.includes("r&b") || g.includes("blues") || g.includes("funk"))
     return "Soul / R&B";
   if (g.includes("indie") || g.includes("folk") || g.includes("pop")) return "Indie";
+  if (g.includes("reggae") || g.includes("ska") || g.includes("afrobeat") || g.includes("african") || g.includes("world"))
+    return "World Music";
   const exact = ALLOWED_GENRES.find((x) => x.toLowerCase() === g);
-  return exact ?? "Rock";
+  return exact ?? "Other";
 }
 
 function normalizeMuseumType(raw?: string, title?: string) {
@@ -110,6 +117,31 @@ function normalizeComedyType(raw?: string, title?: string) {
   return exact ?? "Stand-Up";
 }
 
+const ALLOWED_THEATER_TYPES = [
+  "Play",
+  "Musical",
+  "Drama",
+  "Comedy",
+  "Family",
+  "Immersive",
+  "New Work",
+  "Classic Revival",
+];
+
+function normalizeTheaterType(raw?: string, title?: string) {
+  const text = `${title ?? ""} ${raw ?? ""}`;
+  const lower = (raw ?? "").toLowerCase();
+  if (/(musical|the musical)/i.test(text)) return "Musical";
+  if (/(world premiere|new work|new play)/i.test(text)) return "New Work";
+  if (/(revival|classic|shakespeare|chekhov|ibsen)/i.test(text)) return "Classic Revival";
+  if (/(immersive|interactive)/i.test(text)) return "Immersive";
+  if (/(family|kids|children)/i.test(text)) return "Family";
+  if (/(comedy|farce)/i.test(text)) return "Comedy";
+  if (/(drama|tragedy)/i.test(text)) return "Drama";
+  const exact = ALLOWED_THEATER_TYPES.find((x) => x.toLowerCase() === lower);
+  return exact ?? "Play";
+}
+
 function normalizeClassicalType(raw?: string, title?: string) {
   const text = `${title ?? ""} ${raw ?? ""}`;
   const lower = (raw ?? "").toLowerCase();
@@ -123,7 +155,7 @@ function normalizeClassicalType(raw?: string, title?: string) {
   if (/(family|kids|children)/i.test(text)) return "Family Concert";
   if (/(symphony|orchestra|philharmonic|concerto|symphonic)/i.test(text)) return "Symphony";
   const exact = ALLOWED_CLASSICAL_TYPES.find((x) => x.toLowerCase() === lower);
-  return exact ?? "Symphony";
+  return exact ?? "Other";
 }
 
 function isSportsEvent(raw?: string, title?: string) {
@@ -137,6 +169,7 @@ const NON_EVENT = /(yoga|fitness class|parking|tour of|museum|open gym|private e
 const NON_MUSEUM = /(private event|rental|wedding|corporate|members-only|closed)/i;
 const NON_CLASSICAL = /(private event|rental|wedding|corporate|parking|guided tour|worship service|sunday mass|yoga)/i;
 const NON_COMEDY = /(private event|rental|corporate|parking|class\b|workshop)/i;
+const NON_THEATER = /(private event|rental|wedding|corporate|parking|guided tour|workshop|class\b|auditions?)/i;
 
 function isIsoDate(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -146,7 +179,9 @@ function fingerprint(venue: string, date: string, artist: string, category: stri
   return `${venue}|${date}|${artist}|${category}`.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-const PLACEHOLDER_VALUE = /^(none|n\/a|null|tbd|unknown(\s.+)?)$/i;
+// The trailing alternative catches values with no letters or digits at all
+// (e.g. a lone "/" or "-" the model hallucinates from a page separator).
+const PLACEHOLDER_VALUE = /^(none|n\/a|null|tbd|unknown(\s.+)?)$|^[^a-z0-9]*$/i;
 
 // Firecrawl's model sometimes fills empty fields with the literal string
 // "null"/"n/a"/etc. instead of omitting them, so a truthy-check alone lets
@@ -209,8 +244,22 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
       `Return date as YYYY-MM-DD, time as a readable start time like "7:30 PM", price as a short string (e.g. "$45" or "Free") or null, ` +
       `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
       `Return imageUrl as the absolute URL of the program or performer photo/artwork if one is shown for this listing, or null if there isn't one. ` +
-      `Return genre as one of: Symphony, Opera, Ballet, Chamber Music, Choral, Organ / Sacred, Recital, Contemporary Classical, Family Concert. ` +
+      `Return genre as one of: Symphony, Opera, Ballet, Chamber Music, Choral, Organ / Sacred, Recital, Contemporary Classical, Family Concert, Other. ` +
+      `Use Other for anything that isn't primarily a musical performance in one of those forms (e.g. a lecture, talk, or hybrid theatrical/multimedia work). ` +
       `Put the program or production title in artist and the orchestra, company, conductor, or featured soloist in support.` +
+      (venue.promptHint ? ` ${venue.promptHint}` : "")
+    );
+  }
+
+  if (venue.category === "theater") {
+    return (
+      `Extract every upcoming play, musical, or theatrical production listed on this page for ${venue.venue}. ` +
+      `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. For a run with multiple performance dates, extract the opening date. ` +
+      `Return date as YYYY-MM-DD, time as a readable start time like "7:30 PM" or null, price as a short string (e.g. "$65" or "Free") or null, ` +
+      `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
+      `Return imageUrl as the absolute URL of the production's key art or poster if one is shown for this listing, or null if there isn't one. ` +
+      `Return genre as one of: Play, Musical, Drama, Comedy, Family, Immersive, New Work, Classic Revival. ` +
+      `Put the production title in artist and the playwright, director, or company in support.` +
       (venue.promptHint ? ` ${venue.promptHint}` : "")
     );
   }
@@ -234,17 +283,19 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     `Extract every upcoming live music or entertainment event listed on this page for ${venue.venue}. ` +
     `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
     `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string ` +
-    `(e.g. "$35" or "Free") or null, genre as a short music genre, and ticketUrl as the absolute ticket link ` +
-    `(fall back to the page URL). Return imageUrl as the absolute URL of the artist photo or show poster if one is shown for this listing, or null if there isn't one. ` +
-    `Put the headliner in artist and any opener/tour name in support.` +
+    `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Punk, Soul / R&B, World Music, Children, Other. ` +
+    `Use World Music for reggae, ska, afrobeat, African, or other global/traditional genres. Use Other only if nothing fits, rather than guessing the closest wrong one. ` +
+    `Return ticketUrl as the absolute ticket link (fall back to the page URL). Return imageUrl as the absolute URL of the artist photo or show poster if one is shown for this listing, or null if there isn't one. ` +
+    `Put the headliner in artist and any opener/tour name in support. ` +
+    `Use the event's full listed title as artist, including qualifiers like "Dance Night", "Tribute", or "vs" — ` +
+    `never shorten a themed/tribute night's title down to just a celebrity's name, since that would wrongly imply they're performing live.` +
     (venue.promptHint ? ` ${venue.promptHint}` : "")
   );
 }
 
 async function scrapeVenue(venue: VenueSource, todayIso: string) {
-  const lovableKey = process.env["LOVABLE_API_KEY"];
   const firecrawlKey = process.env["FIRECRAWL_API_KEY"];
-  if (!lovableKey || !firecrawlKey) throw new Error("Missing Firecrawl credentials");
+  if (!firecrawlKey) throw new Error("Missing Firecrawl credentials");
 
   const isMuseum = venue.category === "museums_exhibits";
 
@@ -252,8 +303,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": firecrawlKey,
+      Authorization: `Bearer ${firecrawlKey}`,
     },
     body: JSON.stringify({
       url: venue.url,
@@ -261,7 +311,9 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
       formats: [
         {
           type: "json",
-          prompt: buildPrompt(venue, todayIso),
+          prompt:
+            buildPrompt(venue, todayIso) +
+            ` If this page has no real, dated events actually listed (e.g. it's a nav menu, a ministry/about page, or an empty calendar template), return an empty events array. Never invent a plausible-sounding event that isn't explicitly on the page.`,
           schema: {
             type: "object",
             properties: {
@@ -312,20 +364,25 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
   const category = venue.category ?? "concerts";
   const isClassical = venue.category === "classical";
   const isComedy = venue.category === "comedy";
+  const isTheater = venue.category === "theater";
   const normalize = isMuseum
     ? normalizeMuseumType
     : isClassical
       ? normalizeClassicalType
       : isComedy
         ? normalizeComedyType
-        : normalizeGenre;
+        : isTheater
+          ? normalizeTheaterType
+          : normalizeGenre;
   const nonEvent = isMuseum
     ? NON_MUSEUM
     : isClassical
       ? NON_CLASSICAL
       : isComedy
         ? NON_COMEDY
-        : NON_EVENT;
+        : isTheater
+          ? NON_THEATER
+          : NON_EVENT;
 
   const rows = raw
     .filter((e) => typeof e.artist === "string" && e.artist.trim() && isIsoDate(e.date))
@@ -333,22 +390,30 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     .filter((e) => (e.date as string) >= todayIso)
     .filter((e) => !nonEvent.test(e.artist as string))
     .filter((e) => !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))
-    .map((e) => ({
-      fingerprint: fingerprint(venue.venue, e.date as string, e.artist as string, category),
-      artist: toTitleCase((e.artist as string).trim().slice(0, 200)),
-      support: toTitleCase(cleanValue(e.support, 200)),
-      venue: venue.venue,
-      city: venue.city,
-      date: e.date as string,
-      time: cleanValue(e.time, 40),
-      genre: normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`),
-      price: cleanValue(e.price, 40),
-      ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
-      image_url: cleanImageUrl(e.imageUrl),
-      source: venue.source,
-      category,
-      last_seen_at: new Date().toISOString(),
-    }));
+    .map((e) => {
+      const genre = normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`);
+      // A classical-venue listing that isn't really a musical performance
+      // (a lecture, a hybrid multimedia work, etc.) goes to the "Other"
+      // category instead of cluttering Classical / Symphony with a genre
+      // that doesn't belong there.
+      const rowCategory = isClassical && genre === "Other" ? "other" : category;
+      return {
+        fingerprint: fingerprint(venue.venue, e.date as string, e.artist as string, rowCategory),
+        artist: toTitleCase((e.artist as string).trim().slice(0, 200)),
+        support: toTitleCase(cleanValue(e.support, 200)),
+        venue: venue.venue,
+        city: venue.city,
+        date: e.date as string,
+        time: cleanValue(e.time, 40),
+        genre,
+        price: cleanValue(e.price, 40),
+        ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
+        image_url: cleanImageUrl(e.imageUrl),
+        source: venue.source,
+        category: rowCategory,
+        last_seen_at: new Date().toISOString(),
+      };
+    });
 
   // De-duplicate within a single page (same venue/date/artist/category listed twice).
   const seen = new Set<string>();

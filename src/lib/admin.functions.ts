@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { pacificToday } from "@/lib/date-ranges";
 
 export type AdminVenue = {
   id: string;
@@ -67,6 +68,40 @@ export const deleteVenue = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("venues").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export type AdminEvent = {
+  id: string;
+  artist: string;
+  venue: string;
+  city: string;
+  date: string;
+  category: string;
+  trending: boolean;
+};
+
+export const listUpcomingEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AdminEvent[]> => {
+    const { data, error } = await context.supabase
+      .from("events")
+      .select("id, artist, venue, city, date, category, trending")
+      .gte("date", pacificToday())
+      .order("date", { ascending: true })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({ ...r, trending: r.trending ?? false })) as AdminEvent[];
+  });
+
+const trendingInput = z.object({ id: z.string().uuid(), trending: z.boolean() });
+
+export const setEventTrending = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => trendingInput.parse(d))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase.from("events").update({ trending: data.trending }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
