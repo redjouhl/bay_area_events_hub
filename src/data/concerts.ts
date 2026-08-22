@@ -145,7 +145,7 @@ export const THEATER_TYPES = [
   "Classic Revival",
 ] as const;
 
-export const SPORTS_TYPES = ["NBA", "MLB", "NFL", "NHL", "Soccer"] as const;
+export const SPORTS_TYPES = ["NBA", "WNBA", "MLB", "Baseball", "NFL", "NHL", "MLS", "NWSL", "USL", "Cricket"] as const;
 
 export const concerts: Concert[] = [
   {

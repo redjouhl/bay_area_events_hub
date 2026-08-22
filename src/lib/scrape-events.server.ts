@@ -53,7 +53,7 @@ type ScrapedEvent = {
   imageUrl?: string;
 };
 
-const SPORTS = /(soccer|football|basketball|hockey|baseball|wrestl|boxing|\bmma\b|\bufc\b|roller derby|rugby|lacrosse|\bvs\.?\b|oakland roots|golden state warriors|oakland ballers)/i;
+const SPORTS = /(soccer|football|basketball|hockey|baseball|cricket|wrestl|boxing|\bmma\b|\bufc\b|roller derby|rugby|lacrosse|\bvs\.?\b|oakland roots|golden state warriors|oakland ballers|golden state valkyries|san jose earthquakes|bay fc|san francisco unicorns)/i;
 // "baby" alone is deliberately excluded: too many real artist names contain
 // it (e.g. rap acts) and would false-positive into the Children genre.
 const CHILDREN = /(story ?time|kids|children|family show|toddler|preschool|puppet|sing[- ]?along for kids|for babies)/i;
@@ -83,11 +83,16 @@ function normalizeGenre(raw?: string, title?: string) {
 // freeform genre field.
 function normalizeSportsGenre(teamName: string) {
   const key = teamName.toLowerCase();
+  if (key.includes("valkyries")) return "WNBA";
   if (key.includes("warriors")) return "NBA";
   if (key.includes("giants")) return "MLB";
+  if (key.includes("ballers")) return "Baseball";
   if (key.includes("49ers")) return "NFL";
   if (key.includes("sharks")) return "NHL";
-  if (key.includes("roots")) return "Soccer";
+  if (key.includes("earthquakes")) return "MLS";
+  if (key.includes("bay fc")) return "NWSL";
+  if (key.includes("roots")) return "USL";
+  if (key.includes("unicorns")) return "Cricket";
   return "Other";
 }
 
@@ -284,7 +289,7 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
       `Return date as YYYY-MM-DD, time as a readable start time like "7:00 PM" or null, price as a short string (e.g. "$45" or "From $45") or null, ` +
       `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
       `Return imageUrl as the absolute URL of the opponent's logo or a matchup graphic if one is shown for this listing, or null if there isn't one. ` +
-      `Return genre as one of: NBA, MLB, NFL, NHL, Soccer, whichever league this team plays in. ` +
+      `Return genre as one of: NBA, WNBA, MLB, Baseball, NFL, NHL, MLS, NWSL, USL, Cricket, whichever league this team plays in. ` +
       `Put the matchup in artist as "${venue.source} vs. [Opponent]" (fill in the real opponent), and leave support empty unless the page calls out something notable like a playoff round or a themed night.` +
       (venue.promptHint ? ` ${venue.promptHint}` : "")
     );
