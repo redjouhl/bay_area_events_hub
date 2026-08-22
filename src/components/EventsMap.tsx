@@ -7,12 +7,18 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import type { Concert } from "@/data/concerts";
 
-// Vite serves Leaflet's default marker images at hashed URLs; without this
-// the pins silently fail to render (a long-standing Leaflet+bundler quirk).
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
+// Leaflet's Icon.Default auto-detects an imagePath and prepends it to
+// whatever iconUrl you give it, which doubles up Vite's already-resolved
+// bundler URLs into a broken path. Swapping in a plain L.Icon as the
+// marker prototype's default sidesteps that prepending entirely.
+L.Marker.prototype.options.icon = new L.Icon({
   iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
   shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
 const youAreHereIcon = new L.Icon({
