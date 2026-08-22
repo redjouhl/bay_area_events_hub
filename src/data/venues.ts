@@ -1,4 +1,4 @@
-export type VenueCategory = "concerts" | "museums_exhibits" | "classical" | "comedy";
+export type VenueCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater";
 
 export type VenueSource = {
   venue: string;
@@ -282,9 +282,20 @@ export const VENUE_SOURCES: VenueSource[] = [
   { venue: "Club Fox", city: "Redwood City", url: "https://www.clubfoxrwc.com/events", source: "Club Fox", category: "comedy" },
   { venue: "Peninsula Comedy", city: "Burlingame", url: "https://www.peninsulacomedy.com/events", source: "Peninsula Comedy", category: "comedy" },
   { venue: "Fox Theatre / Little Fox Theatre", city: "Redwood City", url: "https://foxrwc.com/events", source: "Fox Theatre Redwood City", category: "comedy", promptHint: "Only include comedy shows at the Fox Theatre / Little Fox Theatre in Redwood City; skip music and theater events." },
+
+  // Theater
+  { venue: "American Conservatory Theater", city: "San Francisco", url: "https://www.act-sf.org/whats-on", source: "American Conservatory Theater", category: "theater" },
+  { venue: "SF Playhouse", city: "San Francisco", url: "https://sfplayhouse.org/calendar/", source: "SF Playhouse", category: "theater" },
+  { venue: "Golden Gate Theatre", city: "San Francisco", url: "https://www.broadwaysf.com/events", source: "BroadwaySF", category: "theater", promptHint: "Only include musicals and plays at the Golden Gate Theatre; skip comedy specials and other theaters." },
+  { venue: "Curran Theatre", city: "San Francisco", url: "https://www.sfcurran.com/whats-on/", source: "Curran Theatre", category: "theater", promptHint: "Only include musicals and plays; skip comedy shows and stand-up." },
+  { venue: "Orpheum Theatre", city: "San Francisco", url: "https://www.broadwaysf.com/events", source: "BroadwaySF", category: "theater", promptHint: "Only include musicals and plays at the Orpheum Theatre; skip comedy specials and other theaters." },
+  { venue: "Magic Theatre", city: "San Francisco", url: "https://magictheatre.org/calendar", source: "Magic Theatre", category: "theater" },
+  { venue: "Berkeley Repertory Theatre", city: "Berkeley", url: "https://www.berkeleyrep.org/shows", source: "Berkeley Repertory Theatre", category: "theater" },
+  { venue: "TheatreWorks Silicon Valley", city: "Palo Alto", url: "https://theatreworks.org/mainstage/", source: "TheatreWorks Silicon Valley", category: "theater" },
 ];
 
 export const CONCERT_VENUES = VENUE_SOURCES.filter((v) => v.category === "concerts");
 export const MUSEUM_VENUES = VENUE_SOURCES.filter((v) => v.category === "museums_exhibits");
 export const CLASSICAL_VENUES = VENUE_SOURCES.filter((v) => v.category === "classical");
 export const COMEDY_VENUES = VENUE_SOURCES.filter((v) => v.category === "comedy");
+export const THEATER_VENUES = VENUE_SOURCES.filter((v) => v.category === "theater");
