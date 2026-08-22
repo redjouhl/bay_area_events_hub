@@ -604,10 +604,6 @@ function Index() {
       <footer className="border-t border-border py-10">
         <div className="mx-auto max-w-6xl px-4 text-sm text-muted-foreground">
           <p>
-            Happenly · Bay Area concerts and museum exhibits refreshed automatically from venue calendars. Tickets are sold by the linked venues and
-            ticketing partners.
-          </p>
-          <p className="mt-3">
             Don’t see your event or venue?{" "}
             <a href="mailto:info@happenly.app" className="text-primary underline decoration-primary/50 underline-offset-4 hover:text-primary/90">
               Holler at us at info@happenly.app
