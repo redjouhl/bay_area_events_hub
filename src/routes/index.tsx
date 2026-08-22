@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search, TicketX } from "lucide-react";
-import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, isSoldOut, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
+import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, SPORTS_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, isSoldOut, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
 import { getEvents } from "@/lib/events.functions";
 import { getRegions } from "@/lib/regions.functions";
 import { getVenueCoordinates } from "@/lib/venues.functions";
@@ -50,7 +50,7 @@ export const Route = createFileRoute("/")({
 
 type DateRange = "all" | "today" | "throughSunday" | "weekend" | "week" | "month";
 type SortOption = "chronological" | "priceLowHigh" | "priceHighLow" | "distance";
-type Category = "all" | "classical" | "comedy" | "concerts" | "family" | "free" | "museums_exhibits" | "other" | "theater";
+type Category = "all" | "classical" | "comedy" | "concerts" | "family" | "free" | "museums_exhibits" | "other" | "sports" | "theater";
 
 const FALLBACK_REGIONS: Record<string, string[]> = {
   "East Bay": ["Oakland", "Berkeley", "Piedmont", "Walnut Creek", "Livermore", "Fremont", "Kensington", "Castro Valley", "Albany"],
@@ -261,6 +261,7 @@ function Index() {
   const isFreeCategory = category === "free";
   const isOtherCategory = category === "other";
   const isFamilyCategory = category === "family";
+  const isSports = category === "sports";
   const genreOptions = isMuseum
     ? MUSEUM_TYPES
     : isClassical
@@ -269,9 +270,11 @@ function Index() {
         ? COMEDY_TYPES
         : isTheater
           ? THEATER_TYPES
-          : isOtherCategory || isFamilyCategory
-            ? []
-            : GENRES;
+          : isSports
+            ? SPORTS_TYPES
+            : isOtherCategory || isFamilyCategory
+              ? []
+              : GENRES;
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -293,6 +296,7 @@ function Index() {
           {categoryPill("free", "Free")}
           {categoryPill("museums_exhibits", "Museums")}
           {categoryPill("other", "Other")}
+          {categoryPill("sports", "Sports")}
           {categoryPill("theater", "Theater")}
         </div>
       </div>
@@ -323,9 +327,11 @@ function Index() {
                         ? "Search comedians, clubs, cities…"
                         : isTheater
                           ? "Search shows, playwrights, theaters…"
-                          : isAll || isFreeCategory || isOtherCategory || isFamilyCategory
-                            ? "Search events, venues, cities…"
-                            : "Search artists, venues, cities…"
+                          : isSports
+                            ? "Search teams, opponents, arenas…"
+                            : isAll || isFreeCategory || isOtherCategory || isFamilyCategory
+                              ? "Search events, venues, cities…"
+                              : "Search artists, venues, cities…"
                 }
                 aria-label={
                   isMuseum
@@ -336,9 +342,11 @@ function Index() {
                         ? "Search comedy shows"
                         : isTheater
                           ? "Search theater shows"
-                          : isAll || isFreeCategory || isOtherCategory || isFamilyCategory
-                            ? "Search events"
-                            : "Search concerts"
+                          : isSports
+                            ? "Search sports events"
+                            : isAll || isFreeCategory || isOtherCategory || isFamilyCategory
+                              ? "Search events"
+                              : "Search concerts"
                 }
                 className="border-0 bg-transparent text-base text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
               />
@@ -348,7 +356,7 @@ function Index() {
           {query.trim() && (
             <div className="mt-8">
               <p className="text-sm uppercase tracking-widest text-muted-foreground">
-                {results.length} {results.length === 1 ? (isMuseum ? "match" : "show") : isMuseum ? "matches" : "shows"}
+                {results.length} {results.length === 1 ? (isMuseum ? "match" : isSports ? "game" : "show") : isMuseum ? "matches" : isSports ? "games" : "shows"}
               </p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {results.map((c) => (
@@ -399,7 +407,9 @@ function Index() {
                     ? "All comedy shows"
                     : isTheater
                       ? "All theater shows"
-                      : isAll
+                      : isSports
+                        ? "All games"
+                        : isAll
                         ? "All events"
                         : isFreeCategory
                           ? "Free events"
@@ -473,7 +483,7 @@ function Index() {
               {!isOtherCategory && !isFamilyCategory && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   <button onClick={() => setGenre("All")} className={genreChip(genre === "All")}>
-                    {isMuseum ? "All exhibit types" : isClassical || isComedy || isTheater ? "All types" : "All genres"}
+                    {isMuseum ? "All exhibit types" : isSports ? "All leagues" : isClassical || isComedy || isTheater ? "All types" : "All genres"}
                   </button>
                   {genreOptions.map((g) => (
                     <button key={g} onClick={() => setGenre(g)} className={genreChip(genre === g)}>
@@ -487,7 +497,7 @@ function Index() {
             {!eventsLoading && (
               <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm uppercase tracking-widest text-muted-foreground">
-                  {results.length} {results.length === 1 ? (isMuseum ? "exhibit" : "show") : isMuseum ? "exhibits" : "shows"}
+                  {results.length} {results.length === 1 ? (isMuseum ? "exhibit" : isSports ? "game" : "show") : isMuseum ? "exhibits" : isSports ? "games" : "shows"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Button

@@ -35,6 +35,6 @@ export const getEvents = createServerFn({ method: "GET" }).handler(async (): Pro
     ...(row.image_url ? { imageUrl: row.image_url } : {}),
     source: row.source,
     trending: row.trending ?? false,
-    category: (row.category as "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "other") ?? "concerts",
+    category: (row.category as "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "sports" | "other") ?? "concerts",
   }));
 });

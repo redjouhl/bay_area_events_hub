@@ -1,4 +1,4 @@
-export type VenueCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater";
+export type VenueCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "sports";
 
 export type VenueSource = {
   venue: string;

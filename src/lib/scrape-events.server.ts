@@ -78,6 +78,19 @@ function normalizeGenre(raw?: string, title?: string) {
   return exact ?? "Other";
 }
 
+// Each sports venue in the database is dedicated to exactly one team, so the
+// league is derived from the team name rather than trusting the model's
+// freeform genre field.
+function normalizeSportsGenre(teamName: string) {
+  const key = teamName.toLowerCase();
+  if (key.includes("warriors")) return "NBA";
+  if (key.includes("giants")) return "MLB";
+  if (key.includes("49ers")) return "NFL";
+  if (key.includes("sharks")) return "NHL";
+  if (key.includes("roots")) return "Soccer";
+  return "Other";
+}
+
 function normalizeMuseumType(raw?: string, title?: string) {
   const text = `${title ?? ""} ${raw ?? ""}`;
   const lower = (raw ?? "").toLowerCase();
@@ -264,6 +277,19 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     );
   }
 
+  if (venue.category === "sports") {
+    return (
+      `Extract every upcoming home game listed on this schedule page for ${venue.venue}. Only include games actually played at ${venue.venue}; skip away games. ` +
+      `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
+      `Return date as YYYY-MM-DD, time as a readable start time like "7:00 PM" or null, price as a short string (e.g. "$45" or "From $45") or null, ` +
+      `and ticketUrl as the absolute ticket link (fall back to the page URL). ` +
+      `Return imageUrl as the absolute URL of the opponent's logo or a matchup graphic if one is shown for this listing, or null if there isn't one. ` +
+      `Return genre as one of: NBA, MLB, NFL, NHL, Soccer, whichever league this team plays in. ` +
+      `Put the matchup in artist as "${venue.source} vs. [Opponent]" (fill in the real opponent), and leave support empty unless the page calls out something notable like a playoff round or a themed night.` +
+      (venue.promptHint ? ` ${venue.promptHint}` : "")
+    );
+  }
+
   const isMuseum = venue.category === "museums_exhibits";
   if (isMuseum) {
     return (
@@ -366,6 +392,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
   const isClassical = venue.category === "classical";
   const isComedy = venue.category === "comedy";
   const isTheater = venue.category === "theater";
+  const isSports = venue.category === "sports";
   const normalize = isMuseum
     ? normalizeMuseumType
     : isClassical
@@ -374,7 +401,9 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
         ? normalizeComedyType
         : isTheater
           ? normalizeTheaterType
-          : normalizeGenre;
+          : isSports
+            ? () => normalizeSportsGenre(venue.source)
+            : normalizeGenre;
   const nonEvent = isMuseum
     ? NON_MUSEUM
     : isClassical
@@ -390,7 +419,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     .filter((e) => !PLACEHOLDER_VALUE.test((e.artist as string).trim()))
     .filter((e) => (e.date as string) >= todayIso)
     .filter((e) => !nonEvent.test(e.artist as string))
-    .filter((e) => !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))
+    .filter((e) => isSports || !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))
     .map((e) => {
       const genre = normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`);
       // A classical-venue listing that isn't really a musical performance

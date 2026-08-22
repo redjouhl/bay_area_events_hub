@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   }),
 });
 
-const CATEGORIES = ["classical", "comedy", "concerts", "museums_exhibits"] as const;
+const CATEGORIES = ["classical", "comedy", "concerts", "museums_exhibits", "sports", "theater"] as const;
 
 type Draft = {
   id?: string;

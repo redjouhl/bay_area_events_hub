@@ -1,4 +1,4 @@
-export type EventCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "other";
+export type EventCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "sports" | "other";
 
 export type Concert = {
   id: string;
@@ -144,6 +144,8 @@ export const THEATER_TYPES = [
   "New Work",
   "Classic Revival",
 ] as const;
+
+export const SPORTS_TYPES = ["NBA", "MLB", "NFL", "NHL", "Soccer"] as const;
 
 export const concerts: Concert[] = [
   {
