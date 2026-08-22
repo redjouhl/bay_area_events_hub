@@ -243,7 +243,7 @@ function Index() {
         setGenre("All");
         setQuery("");
       }}
-      className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-bold transition-all active:scale-95 ${
+      className={`shrink-0 snap-start whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-bold transition-all active:scale-95 ${
         category === value
           ? "pill-active border-transparent"
           : "pill-inactive"
@@ -284,7 +284,7 @@ function Index() {
       </div>
 
       <div className="sticky top-0 z-20 border-y border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl snap-x flex-nowrap items-center gap-2 overflow-x-auto px-4 py-3">
           {categoryPill("all", "All Categories")}
           {categoryPill("concerts", "Concerts & DJs")}
           {categoryPill("comedy", "Comedy")}
