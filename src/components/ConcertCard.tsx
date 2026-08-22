@@ -1,7 +1,7 @@
 import { useState, type SVGProps } from "react";
 import { CalendarDays, MapPin, Ticket, Flame, Heart, Building2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import type { Concert } from "@/data/concerts";
+import { isFreeEvent, type Concert } from "@/data/concerts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -9,6 +9,30 @@ import { useFavorites } from "@/hooks/useFavorites";
 function formatDate(iso: string) {
   const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+function formatDateLabel(dates: string[]) {
+  const sorted = [...dates].sort();
+  if (sorted.length === 1) return formatDate(sorted[0]!);
+
+  const isContiguous = sorted.every((d, i) => {
+    if (i === 0) return true;
+    const prev = new Date(`${sorted[i - 1]}T12:00:00`).getTime();
+    const cur = new Date(`${d}T12:00:00`).getTime();
+    return cur - prev === 86400000;
+  });
+
+  if (isContiguous) {
+    const first = new Date(`${sorted[0]}T12:00:00`);
+    const last = new Date(`${sorted[sorted.length - 1]}T12:00:00`);
+    const firstLabel = first.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const lastLabel = last.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return `${firstLabel}–${lastLabel}`;
+  }
+
+  return sorted
+    .map((d) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" }))
+    .join(", ");
 }
 
 function SpotifyIcon(props: SVGProps<SVGSVGElement>) {
@@ -31,16 +55,107 @@ function initials(name: string) {
   return `${first}${last ?? ""}`.toUpperCase();
 }
 
-export function ConcertCard({ concert }: { concert: Concert }) {
+export function ConcertCardSkeleton({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="gradient-surface flex w-60 shrink-0 animate-pulse flex-col overflow-hidden rounded-xl p-3 opacity-60 sm:w-64">
+        <div className="-mx-3 -mt-3 mb-3 aspect-[16/9] bg-black/10" />
+        <div className="h-4 w-14 rounded-full bg-white/20" />
+        <div className="mt-2 h-5 w-3/4 rounded bg-white/20" />
+        <div className="mt-2 h-3 w-1/2 rounded bg-white/20" />
+        <div className="mt-3 h-7 w-16 rounded-full bg-white/20" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex animate-pulse flex-col overflow-hidden rounded-2xl border border-border bg-card p-5">
+      <div className="-mx-5 -mt-5 mb-4 aspect-[16/9] bg-secondary" />
+      <div className="h-5 w-16 rounded-full bg-secondary" />
+      <div className="mt-4 h-7 w-3/4 rounded bg-secondary" />
+      <div className="mt-3 h-4 w-1/2 rounded bg-secondary" />
+      <div className="mt-2 h-4 w-2/3 rounded bg-secondary" />
+      <div className="mt-5 h-9 w-24 rounded-full bg-secondary" />
+    </div>
+  );
+}
+
+export function ConcertCard({ concert, compact = false }: { concert: Concert; compact?: boolean }) {
   const { isFavorite, toggleFavorite, canFavorite } = useFavorites();
   const navigate = useNavigate();
   const saved = isFavorite(concert.id);
   const isMuseum = concert.category === "museums_exhibits";
+  const isFree = isFreeEvent(concert);
+  const showSpotify = concert.category === "concerts" || concert.category === "classical";
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = concert.imageUrl && !imageFailed;
 
+  if (compact) {
+    return (
+      <article className="gradient-surface group relative flex w-60 shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-transparent p-3 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-64">
+        <div className="-mx-3 -mt-3 mb-3 aspect-[16/9] overflow-hidden">
+          {showImage ? (
+            <img
+              src={concert.imageUrl}
+              alt=""
+              loading="lazy"
+              onError={() => setImageFailed(true)}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black/10 text-xl font-semibold text-white/90">
+              {initials(concert.artist)}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          <Badge variant="secondary" className="border-transparent bg-amber text-[10px] uppercase tracking-wider text-foreground shadow-sm">
+            {concert.genre}
+          </Badge>
+          <button
+            type="button"
+            aria-label={saved ? "Remove from favorites" : "Save this show"}
+            aria-pressed={saved}
+            onClick={() => (canFavorite ? toggleFavorite(concert.id) : navigate({ to: "/auth" }))}
+            className="rounded-full p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
+          >
+            <Heart className={`h-3.5 w-3.5 ${saved ? "fill-white text-white" : ""}`} />
+          </button>
+        </div>
+
+        <h3 className="mt-2 line-clamp-1 text-lg leading-tight text-white">{concert.artist}</h3>
+
+        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-white/80">
+          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            {formatDateLabel(concert.dates?.length ? concert.dates : [concert.date])} · {concert.time}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-xs text-white/80">
+          {isMuseum ? <Building2 className="h-3.5 w-3.5 shrink-0" /> : <MapPin className="h-3.5 w-3.5 shrink-0" />}
+          <span className="truncate">
+            {concert.venue}, {concert.city}
+          </span>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/20 pt-3">
+          <p className="text-display truncate text-base text-white">{concert.price}</p>
+          <Button
+            asChild
+            size="sm"
+            className="h-8 shrink-0 bg-white px-3 text-xs font-semibold uppercase tracking-wide text-foreground hover:bg-white/90"
+          >
+            <a href={concert.ticketUrl} target="_blank" rel="noopener noreferrer">
+              {isFree ? "Info" : isMuseum ? "Visit" : "Tickets"}
+            </a>
+          </Button>
+        </div>
+      </article>
+    );
+  }
+
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sunset/30 hover:shadow-lg hover:shadow-sunset/5">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-1 hover:border-sunset/30 hover:shadow-lg hover:shadow-sunset/5">
       <div className="-mx-5 -mt-5 mb-4 aspect-[16/9] overflow-hidden">
         {showImage ? (
           <img
@@ -58,7 +173,7 @@ export function ConcertCard({ concert }: { concert: Concert }) {
       </div>
 
       <div className="flex items-start justify-between gap-3">
-        <Badge variant="secondary" className="border-transparent bg-sunset/15 uppercase tracking-wider text-sunset">
+        <Badge variant="secondary" className="border-transparent bg-sunset uppercase tracking-wider text-white shadow-sm">
           {concert.genre}
         </Badge>
         <div className="flex items-center gap-2">
@@ -67,7 +182,7 @@ export function ConcertCard({ concert }: { concert: Concert }) {
               <Flame className="h-3.5 w-3.5" /> Trending
             </span>
           )}
-          {!isMuseum && (
+          {showSpotify && (
             <a
               href={spotifySearchUrl(concert.artist)}
               target="_blank"
@@ -104,7 +219,7 @@ export function ConcertCard({ concert }: { concert: Concert }) {
         <div className="flex items-center gap-2">
           <CalendarDays className="h-4 w-4 text-primary" />
           <span>
-            {formatDate(concert.date)} · {concert.time}
+            {formatDateLabel(concert.dates?.length ? concert.dates : [concert.date])} · {concert.time}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -119,14 +234,14 @@ export function ConcertCard({ concert }: { concert: Concert }) {
         </div>
       </dl>
 
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-        <div>
-          <p className="text-display text-2xl text-foreground">{concert.price}</p>
+      <div className="mt-auto flex flex-col items-start gap-3 border-t border-border pt-4">
+        <div className="min-w-0">
+          <p className="text-display text-2xl text-foreground break-words">{concert.price}</p>
           <p className="text-xs text-muted-foreground">via {concert.source}</p>
         </div>
         <Button asChild size="sm" className="font-semibold uppercase tracking-wide">
           <a href={concert.ticketUrl} target="_blank" rel="noopener noreferrer">
-            <Ticket className="mr-1 h-4 w-4" /> {isMuseum ? "Visit" : "Tickets"}
+            <Ticket className="mr-1 h-4 w-4" /> {isFree ? "Event Info" : isMuseum ? "Visit" : "Tickets"}
           </a>
         </Button>
       </div>

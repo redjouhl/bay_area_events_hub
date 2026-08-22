@@ -1,4 +1,4 @@
-export type EventCategory = "concerts" | "museums_exhibits" | "classical" | "comedy";
+export type EventCategory = "concerts" | "museums_exhibits" | "classical" | "comedy" | "theater" | "other";
 
 export type Concert = {
   id: string;
@@ -6,7 +6,8 @@ export type Concert = {
   support?: string;
   venue: string;
   city: string;
-  date: string; // ISO date
+  date: string; // ISO date (earliest occurrence when `dates` has more than one)
+  dates?: string[]; // all ISO dates this listing occurs on, sorted ascending
   time: string;
   genre: string;
   price: string;
@@ -18,6 +19,58 @@ export type Concert = {
 };
 
 export type Event = Concert;
+
+export function isFreeEvent(concert: Pick<Concert, "price">) {
+  return /^free$|no cover/i.test(concert.price.trim());
+}
+
+const FAMILY_GENRES = new Set(["Children", "Family", "Family Concert"]);
+
+export function isFamilyFriendly(concert: Pick<Concert, "genre">) {
+  return FAMILY_GENRES.has(concert.genre);
+}
+
+// Pulls the lowest dollar amount out of a price string (e.g. "$10.00-$15.00"
+// -> 10, "$25" -> 25, "Free"/"No Cover" -> 0). Returns null when the price
+// text has no usable number (e.g. "Sold Out", "Buy Tickets").
+export function parseMinPrice(concert: Pick<Concert, "price">): number | null {
+  if (isFreeEvent(concert)) return 0;
+  const matches = concert.price.match(/\d+(?:\.\d+)?/g);
+  if (!matches) return null;
+  return Math.min(...matches.map(Number));
+}
+
+// Strips a trailing "#163"-style installment marker so recurring events
+// scraped under slightly different name variants still group together.
+function normalizeArtistKey(artist: string) {
+  return artist.trim().toLowerCase().replace(/\s*#\d+\s*$/, "");
+}
+
+/**
+ * Collapses repeat rows for the same artist/venue (e.g. a multi-night
+ * residency scraped as one row per date, each with its own ticket link) into
+ * a single Concert with all of its dates attached, so the UI renders one
+ * tile per event instead of one per date.
+ */
+export function mergeRecurringDates(list: Concert[]): Concert[] {
+  const groups = new Map<string, Concert & { dates: string[] }>();
+  for (const c of list) {
+    const key = `${normalizeArtistKey(c.artist)}|${c.venue}|${c.category}`;
+    const existing = groups.get(key);
+    if (existing) {
+      if (!existing.dates.includes(c.date)) existing.dates.push(c.date);
+      if (!existing.imageUrl && c.imageUrl) existing.imageUrl = c.imageUrl;
+      existing.trending = Boolean(existing.trending || c.trending);
+      if (existing.artist.length > c.artist.length) existing.artist = c.artist;
+    } else {
+      groups.set(key, { ...c, dates: [c.date] });
+    }
+  }
+  return Array.from(groups.values()).map((c) => {
+    const dates = [...c.dates].sort();
+    return { ...c, dates, date: dates[0]! };
+  });
+}
 
 export const CITIES = [
   "San Francisco",
@@ -38,7 +91,9 @@ export const GENRES = [
   "Latin",
   "Punk",
   "Soul / R&B",
+  "World Music",
   "Children",
+  "Other",
 ] as const;
 
 export const CLASSICAL_TYPES = [
@@ -73,6 +128,17 @@ export const COMEDY_TYPES = [
   "Showcase",
   "Storytelling",
   "Comedy Festival",
+] as const;
+
+export const THEATER_TYPES = [
+  "Play",
+  "Musical",
+  "Drama",
+  "Comedy",
+  "Family",
+  "Immersive",
+  "New Work",
+  "Classic Revival",
 ] as const;
 
 export const concerts: Concert[] = [

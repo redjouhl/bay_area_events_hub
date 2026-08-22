@@ -22,7 +22,7 @@ export function SiteHeader() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-6">
+    <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6">
       <Link to="/" className="flex items-center gap-2 text-display text-2xl tracking-widest text-foreground">
         <CalendarDays className="h-6 w-6 text-primary" />
         HAPPENLY
