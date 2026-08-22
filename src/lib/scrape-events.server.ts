@@ -239,6 +239,22 @@ function cleanImageUrl(raw: string | undefined) {
   return httpsUrl;
 }
 
+// Paste/note-sharing hosts occasionally show up embedded in a venue's own
+// page (a stray dev artifact, an old widget) and get mistaken for the real
+// ticket link. They're never a legitimate ticket/event-info URL.
+const JUNK_TICKET_HOST = /(^|\.)(pastie\.org|pastebin\.com|paste\.ee|hastebin\.com)$/i;
+
+function cleanTicketUrl(raw: string | undefined, fallback: string) {
+  const trimmed = raw?.trim();
+  if (!trimmed || !/^https?:\/\//i.test(trimmed)) return fallback;
+  try {
+    if (JUNK_TICKET_HOST.test(new URL(trimmed).hostname)) return fallback;
+  } catch {
+    return fallback;
+  }
+  return trimmed;
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function buildPrompt(venue: VenueSource, todayIso: string) {
@@ -442,7 +458,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
         time: cleanValue(e.time, 40),
         genre,
         price: cleanValue(e.price, 40),
-        ticket_url: e.ticketUrl?.startsWith("http") ? e.ticketUrl : venue.url,
+        ticket_url: cleanTicketUrl(e.ticketUrl, venue.url),
         image_url: cleanImageUrl(e.imageUrl),
         source: venue.source,
         category: rowCategory,
