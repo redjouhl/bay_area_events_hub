@@ -607,8 +607,8 @@ function Index() {
             Don’t see your event or venue?{" "}
             <a href="mailto:info@happenly.app" className="text-primary underline decoration-primary/50 underline-offset-4 hover:text-primary/90">
               Holler at us at info@happenly.app
-            </a>{" "}
-            — we’d love to add it!
+            </a>
+            {". We’d love to add it!"}
           </p>
         </div>
       </footer>
