@@ -295,9 +295,9 @@ function Index() {
           {categoryPill("family", "Family")}
           {categoryPill("free", "Free")}
           {categoryPill("museums_exhibits", "Museums")}
-          {categoryPill("other", "Other")}
           {categoryPill("sports", "Sports")}
           {categoryPill("theater", "Theater")}
+          {categoryPill("other", "Other")}
         </div>
       </div>
 
