@@ -1,14 +1,14 @@
 // Netlify Scheduled Function — runs weekly and asks the site's own
 // /api/public/hooks/refresh-events endpoint to re-scrape every venue.
 //
-// Needs FIRECRAWL_API_KEY and SUPABASE_PUBLISHABLE_KEY set as Netlify
+// Needs FIRECRAWL_API_KEY and REFRESH_EVENTS_SECRET set as Netlify
 // environment variables (Site settings → Environment variables).
 export default async () => {
   const siteUrl = process.env.URL;
-  const apiKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const apiKey = process.env.REFRESH_EVENTS_SECRET;
 
   if (!siteUrl || !apiKey) {
-    console.error("refresh-events-cron: missing URL or SUPABASE_PUBLISHABLE_KEY env var");
+    console.error("refresh-events-cron: missing URL or REFRESH_EVENTS_SECRET env var");
     return new Response("Missing config", { status: 500 });
   }
 

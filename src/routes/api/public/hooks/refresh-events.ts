@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 async function handleRefresh(request: Request) {
   const apiKey = request.headers.get("apikey") ?? request.headers.get("x-api-key");
-  const expected = process.env["SUPABASE_ANON_KEY"] ?? process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const expected = process.env["REFRESH_EVENTS_SECRET"];
   if (!expected || apiKey !== expected) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,

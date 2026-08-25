@@ -43,7 +43,7 @@ The `venues` table only stores scrape targets (venue name + calendar URL) — th
 FIRECRAWL_API_KEY=
 ```
 
-Get a key at firecrawl.dev. Trigger a scrape by POSTing to `/api/public/hooks/refresh-events` with an `apikey` header set to your `SUPABASE_PUBLISHABLE_KEY` (optionally with a JSON body `{ "venues": ["Venue Name", ...] }` to scrape a subset). Without `FIRECRAWL_API_KEY` set, `events` stays empty and the homepage falls back to the hardcoded placeholder data in `src/data/concerts.ts`.
+Get a key at firecrawl.dev. Trigger a scrape by POSTing to `/api/public/hooks/refresh-events` with an `apikey` header set to `REFRESH_EVENTS_SECRET` (a value you pick — see below; optionally with a JSON body `{ "venues": ["Venue Name", ...] }` to scrape a subset). Without `FIRECRAWL_API_KEY` set, `events` stays empty and the homepage falls back to the hardcoded placeholder data in `src/data/concerts.ts`.
 
 ### Testing a production build locally
 
@@ -69,10 +69,12 @@ Pushing a code change to GitHub does **not** apply pending migrations — that's
 
 Deploys automatically via Netlify whenever `main` is pushed. No manual deploy step needed — commit and push when ready, and the live site updates a few minutes later.
 
-Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access. Also add `FIRECRAWL_API_KEY` there — it's required for the scheduled event refresh described below.
+Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access. Also add `FIRECRAWL_API_KEY` and `REFRESH_EVENTS_SECRET` there — both are required for the scheduled event refresh described below.
 
 ### Automatic weekly event refresh
 
-`netlify/functions/refresh-events-cron.mjs` is a Netlify Scheduled Function that runs weekly (Thursdays, 6am Pacific — ahead of weekend browsing) and POSTs to `/api/public/hooks/refresh-events` to re-scrape every venue. It needs `FIRECRAWL_API_KEY` and `SUPABASE_PUBLISHABLE_KEY` set as Netlify environment variables. Chosen for Firecrawl cost reasons — daily crawling of all ~95 venues runs well past the free/cheap plan tiers; weekly fits comfortably in Firecrawl's Hobby plan (~$16/mo).
+`netlify/functions/refresh-events-cron.mjs` is a Netlify Scheduled Function that runs weekly (Thursdays, 6am Pacific — ahead of weekend browsing) and POSTs to `/api/public/hooks/refresh-events` to re-scrape every venue. It needs `FIRECRAWL_API_KEY` and `REFRESH_EVENTS_SECRET` set as Netlify environment variables. Chosen for Firecrawl cost reasons — daily crawling of all ~95 venues runs well past the free/cheap plan tiers; weekly fits comfortably in Firecrawl's Hobby plan (~$16/mo).
+
+`REFRESH_EVENTS_SECRET` is a value you generate yourself (e.g. `openssl rand -hex 32`) — it is **not** the Supabase publishable/anon key. That key ships in the client bundle and is meant to be public, so it can't gate this endpoint; anyone who found it in the browser's network tab could trigger scrapes on demand and burn Firecrawl credits outside the weekly schedule. Keep `REFRESH_EVENTS_SECRET` server-side only (Netlify env vars, never a `VITE_`-prefixed var).
 
 Note: a full scrape of all ~95 venues takes 10+ minutes, which can exceed Netlify's function execution limit. That's not a data-loss risk — the scraper saves each venue's events as it finishes them (not all at once at the end), so a run that gets cut off just means the remaining venues catch up on the next scheduled run.
