@@ -342,11 +342,12 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
     `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string ` +
     `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Punk, Soul / R&B, World Music, Open Mic, Children, Other. ` +
-    `Most venue calendars don't label genre at all, so determine it from what you actually know about the artist's real musical style — don't default to Rock just because the page gives you nothing to go on. ` +
+    `Many venue pages tag each listing with its own genre/category right on the page (a colored label or text like "Jazz", "Bluegrass", "Reggae", "Americana", "Workshop") — when a listing has one, that's the primary signal: map it to the closest allowed value (e.g. Bluegrass/Country/Folk/Americana/Old Time -> Indie) instead of guessing from the artist name. ` +
+    `If there's no such label, determine genre from what you actually know about the artist's real musical style — don't default to Rock just because the page gives you nothing to go on. ` +
     `Use Open Mic for open mic nights, jam sessions, and other come-one-come-all musician nights. ` +
     `Use World Music for reggae, ska, afrobeat, African, Bollywood/Indian, Middle Eastern, or other global/traditional genres. Use Indie for folk, Americana, singer-songwriter, and other non-mainstream acoustic/alternative acts. ` +
-    `If you don't actually recognize the artist or their style, use Other rather than guessing Rock as a safe default — a wrong specific genre is worse than an honest Other. ` +
-    `Return ticketUrl as the absolute ticket link (fall back to the page URL). Return imageUrl as the absolute URL of the artist photo or show poster if one is shown for this listing, or null if there isn't one. ` +
+    `If you don't actually recognize the artist or their style, use Other rather than guessing Rock as a safe default — a wrong specific genre is worse than an honest Other. Also use Other for listings that aren't really a performance (e.g. a paid class/workshop) even if a specific instructor is well-known for a genre. ` +
+    `Return ticketUrl as the absolute ticket link (fall back to the page URL). Return imageUrl as the absolute URL of that specific listing's own artist photo or show poster if one is shown — each listing has its own image; never reuse another listing's photo just because they're adjacent on the page or share a venue, unless the page explicitly shows one shared image for a multi-act bill. Use null if there isn't one. ` +
     `Put the headliner in artist and any opener/tour name in support. ` +
     `Use the event's full listed title as artist, including qualifiers like "Dance Night", "Tribute", or "vs" — ` +
     `never shorten a themed/tribute night's title down to just a celebrity's name, since that would wrongly imply they're performing live.` +
