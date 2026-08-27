@@ -96,6 +96,7 @@ export const GENRES = [
   "Punk",
   "Soul / R&B",
   "World Music",
+  "Open Mic",
   "Children",
   "Other",
 ] as const;

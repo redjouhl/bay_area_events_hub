@@ -13,6 +13,7 @@ const ALLOWED_GENRES = [
   "Punk",
   "Soul / R&B",
   "World Music",
+  "Open Mic",
   "Children",
   "Other",
 ] as const;
@@ -74,6 +75,7 @@ function normalizeGenre(raw?: string, title?: string) {
   if (g.includes("indie") || g.includes("folk") || g.includes("pop")) return "Indie";
   if (g.includes("reggae") || g.includes("ska") || g.includes("afrobeat") || g.includes("african") || g.includes("world"))
     return "World Music";
+  if (g.includes("open mic")) return "Open Mic";
   const exact = ALLOWED_GENRES.find((x) => x.toLowerCase() === g);
   return exact ?? "Other";
 }
@@ -339,7 +341,8 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     `Extract every upcoming live music or entertainment event listed on this page for ${venue.venue}. ` +
     `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
     `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string ` +
-    `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Punk, Soul / R&B, World Music, Children, Other. ` +
+    `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Punk, Soul / R&B, World Music, Open Mic, Children, Other. ` +
+    `Use Open Mic for open mic nights, jam sessions, and other come-one-come-all musician nights. ` +
     `Use World Music for reggae, ska, afrobeat, African, or other global/traditional genres. Use Other only if nothing fits, rather than guessing the closest wrong one. ` +
     `Return ticketUrl as the absolute ticket link (fall back to the page URL). Return imageUrl as the absolute URL of the artist photo or show poster if one is shown for this listing, or null if there isn't one. ` +
     `Put the headliner in artist and any opener/tour name in support. ` +
