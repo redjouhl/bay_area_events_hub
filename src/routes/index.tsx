@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search, TicketX } from "lucide-react";
+import { CalendarIcon, List, LocateFixed, Map as MapIcon, Search, TicketX, X } from "lucide-react";
+import type { DateRange as PickedRange } from "react-day-picker";
 import { CLASSICAL_TYPES, COMEDY_TYPES, GENRES, MUSEUM_TYPES, SPORTS_TYPES, THEATER_TYPES, isFamilyFriendly, isFreeEvent, isSoldOut, mergeRecurringDates, parseMinPrice, concerts as seedConcerts } from "@/data/concerts";
 import { getEvents } from "@/lib/events.functions";
 import { getRegions } from "@/lib/regions.functions";
@@ -19,6 +20,14 @@ import { pacificToday, weekRange, weekendRange, next7Range, next30Range } from "
 // ever rendered client-side (view starts as "list", so this never enters
 // the tree during SSR).
 const EventsMap = lazy(() => import("@/components/EventsMap").then((m) => ({ default: m.EventsMap })));
+
+function toIso(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function toDate(iso: string) {
+  return new Date(`${iso}T12:00:00`);
+}
 
 function haversineMiles(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   const R = 3958.8;
@@ -64,7 +73,7 @@ function Index() {
   const [city, setCity] = useState<string>("All");
   const [genre, setGenre] = useState<string>("All");
   const [range, setRange] = useState<DateRange>("all");
-  const [specificDate, setSpecificDate] = useState<string | null>(null);
+  const [customRange, setCustomRange] = useState<{ from: string; to: string | null } | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("chronological");
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [category, setCategory] = useState<Category>("concerts");
@@ -151,7 +160,10 @@ function Index() {
           if (!hay.includes(q)) return false;
         }
         const eventDates = c.dates?.length ? c.dates : [c.date];
-        if (specificDate) return eventDates.includes(specificDate);
+        if (customRange) {
+          const to = customRange.to ?? customRange.from;
+          return eventDates.some((d) => d >= customRange.from && d <= to);
+        }
         if (range === "today") return eventDates.includes(todayPT);
         if (range === "throughSunday") return eventDates.some((d) => d >= weekStart && d <= weekEnd);
         if (range === "weekend") return eventDates.some((d) => d >= wkStart && d <= wkEnd);
@@ -189,7 +201,7 @@ function Index() {
     hideSoldOut,
     sortBy,
     range,
-    specificDate,
+    customRange,
     todayPT,
     wkStart,
     wkEnd,
@@ -436,9 +448,9 @@ function Index() {
                     key={value}
                     onClick={() => {
                       setRange(value);
-                      setSpecificDate(null);
+                      setCustomRange(null);
                     }}
-                    className={dateChip(range === value && !specificDate)}
+                    className={dateChip(range === value && !customRange)}
                   >
                     {label}
                   </button>
@@ -446,41 +458,80 @@ function Index() {
 
                 <div className="mx-1 h-6 w-px self-center bg-border" aria-hidden="true" />
 
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <button
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                        specificDate
-                          ? "border-transparent bg-primary text-primary-foreground"
-                          : "border-dashed border-tan/50 bg-transparent text-tan hover:border-tan hover:text-foreground"
-                      }`}
-                    >
-                      <CalendarIcon className="h-3.5 w-3.5" />
-                      {specificDate
-                        ? new Date(`${specificDate}T12:00:00`).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "Pick a date"}
-                    </button>
-                  </PopoverTrigger>
+                <div className="relative inline-flex items-center">
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                          customRange
+                            ? "border-transparent bg-primary pr-7 text-primary-foreground"
+                            : "border-dashed border-tan/50 bg-transparent text-tan hover:border-tan hover:text-foreground"
+                        }`}
+                      >
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {customRange
+                          ? !customRange.to || customRange.from === customRange.to
+                            ? toDate(customRange.from).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                            : `${toDate(customRange.from).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${toDate(customRange.to).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                          : "Pick dates"}
+                      </button>
+                    </PopoverTrigger>
+                    {customRange && (
+                      <button
+                        type="button"
+                        aria-label="Clear date filter"
+                        onClick={() => {
+                          setCustomRange(null);
+                          setCalendarOpen(false);
+                        }}
+                        className="absolute right-1.5 rounded-full p-0.5 text-primary-foreground hover:bg-primary-foreground/20"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   <PopoverContent className="w-auto p-0" align="start">
+                    <div className="flex items-center gap-4 border-b border-border px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">
+                        From{" "}
+                        <span className="font-medium text-foreground">
+                          {customRange ? toDate(customRange.from).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                        </span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        To{" "}
+                        <span className="font-medium text-foreground">
+                          {customRange?.to ? toDate(customRange.to).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                        </span>
+                      </span>
+                    </div>
                     <Calendar
-                      mode="single"
-                      selected={specificDate ? new Date(`${specificDate}T12:00:00`) : undefined}
-                      {...(specificDate ? { defaultMonth: new Date(`${specificDate}T12:00:00`) } : {})}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                        setSpecificDate(iso);
-                        setCalendarOpen(false);
+                      mode="range"
+                      min={1}
+                      selected={
+                        customRange
+                          ? { from: toDate(customRange.from), to: customRange.to ? toDate(customRange.to) : undefined }
+                          : undefined
+                      }
+                      {...(customRange ? { defaultMonth: toDate(customRange.from) } : {})}
+                      onSelect={(r: PickedRange | undefined) => {
+                        if (!r?.from) {
+                          setCustomRange(null);
+                          return;
+                        }
+                        const to = r.to ? toIso(r.to) : null;
+                        setCustomRange({ from: toIso(r.from), to });
+                        // With min={1}, the first click leaves `to` unset so the From/To
+                        // indicator can show the pick is still in progress; only close
+                        // once a second, distinct day completes the range.
+                        if (to) setCalendarOpen(false);
                       }}
                     />
                   </PopoverContent>
-                </Popover>
+                  </Popover>
+                </div>
               </div>
 
-              {!isOtherCategory && !isFamilyCategory && (
+              {!isAll && !isFreeCategory && !isOtherCategory && !isFamilyCategory && (
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                   <button onClick={() => setGenre("All")} className={genreChip(genre === "All")}>
                     {isMuseum ? "All exhibit types" : isSports ? "All leagues" : isClassical || isComedy || isTheater ? "All types" : "All genres"}
@@ -594,7 +645,7 @@ function Index() {
                     setCity("All");
                     setGenre("All");
                     setRange("all");
-                    setSpecificDate(null);
+                    setCustomRange(null);
                   }}
                 >
                   Clear filters
