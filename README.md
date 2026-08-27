@@ -45,6 +45,17 @@ FIRECRAWL_API_KEY=
 
 Get a key at firecrawl.dev. Trigger a scrape by POSTing to `/api/public/hooks/refresh-events` with an `apikey` header set to `REFRESH_EVENTS_SECRET` (a value you pick — see below; optionally with a JSON body `{ "venues": ["Venue Name", ...] }` to scrape a subset). Without `FIRECRAWL_API_KEY` set, `events` stays empty and the homepage falls back to the hardcoded placeholder data in `src/data/concerts.ts`.
 
+#### Genre enrichment (optional)
+
+Most venue calendars don't state a genre, so the scraper has Firecrawl's model guess one — which is unreliable for artists it doesn't recognize. For the `concerts` category, it'll additionally look up each artist on Spotify (real genre data instead of a guess) if these are set:
+
+```
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+```
+
+Get these for free at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) → **Create app** (any name/description works; you don't need a redirect URI for this — client-credentials flow only, no user login). Without these set, genre falls back to the model's guess as before — nothing else breaks.
+
 ### Testing a production build locally
 
 Since some issues only show up in a full build (not the dev server), it's worth running the real build before pushing:
@@ -69,7 +80,7 @@ Pushing a code change to GitHub does **not** apply pending migrations — that's
 
 Deploys automatically via Netlify whenever `main` is pushed. No manual deploy step needed — commit and push when ready, and the live site updates a few minutes later.
 
-Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access. Also add `FIRECRAWL_API_KEY` and `REFRESH_EVENTS_SECRET` there — both are required for the scheduled event refresh described below.
+Netlify environment variables (Site settings → Environment variables) must mirror the same five `SUPABASE_*` / `VITE_SUPABASE_*` values as local `.env`, so the deployed build has database access. Also add `FIRECRAWL_API_KEY` and `REFRESH_EVENTS_SECRET` there — both are required for the scheduled event refresh described below. Add `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` too if you want genre enrichment in production — see above.
 
 ### Automatic weekly event refresh
 

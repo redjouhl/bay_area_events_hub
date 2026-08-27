@@ -80,6 +80,96 @@ function normalizeGenre(raw?: string, title?: string) {
   return exact ?? "Other";
 }
 
+// Spotify's artist genres are ground truth rather than a page-scrape guess,
+// but they're far more granular than our taxonomy (e.g. "modern bollywood",
+// "desi hip hop", "conscious hip hop") — map the tag list down to one of our
+// buckets. Order matters: more specific/frequently-confused genres first.
+function mapSpotifyGenres(genres: string[]): string | null {
+  const g = genres.join(" | ").toLowerCase();
+  if (!g) return null;
+  if (/hip hop|rap|trap/.test(g)) return "Hip-Hop";
+  if (/edm|electro|house|techno|dubstep|drum and bass|trance|dance pop/.test(g)) return "Electronic";
+  if (/jazz/.test(g)) return "Jazz";
+  if (/metal/.test(g)) return "Metal";
+  if (/latin|reggaeton|salsa|cumbia|bachata|banda|mariachi|corrido/.test(g)) return "Latin";
+  if (/punk/.test(g)) return "Punk";
+  if (/soul|r&b|\bfunk\b|blues|gospel/.test(g)) return "Soul / R&B";
+  if (
+    /reggae|\bska\b|afrobeat|afrobeats|amapiano|highlife|african|bollywood|desi|punjabi|bhangra|qawwali|sufi|carnatic|hindustani|indian|k-pop|j-pop|mandopop|cpop|arab|middle eastern|klezmer|\bworld\b/.test(
+      g,
+    )
+  )
+    return "World Music";
+  if (/indie|folk|singer-songwriter|americana|bluegrass|country|old time/.test(g)) return "Indie";
+  if (/^rock$|\brock\b/.test(g)) return "Rock";
+  return null;
+}
+
+let spotifyToken: { value: string; expiresAt: number } | null = null;
+
+async function getSpotifyToken(): Promise<string | null> {
+  const id = process.env["SPOTIFY_CLIENT_ID"];
+  const secret = process.env["SPOTIFY_CLIENT_SECRET"];
+  if (!id || !secret) return null;
+  if (spotifyToken && spotifyToken.expiresAt > Date.now()) return spotifyToken.value;
+  try {
+    const res = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
+      },
+      body: "grant_type=client_credentials",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { access_token?: string; expires_in?: number };
+    if (!data.access_token) return null;
+    spotifyToken = { value: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000 - 60_000 };
+    return spotifyToken.value;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeArtistName(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+// Looks up an artist's real genres on Spotify and maps them to our taxonomy.
+// Only trusts an exact (normalized) name match — a fuzzy/wrong match would be
+// worse than no enrichment at all, since we'd silently overwrite a reasonable
+// guess with a confidently wrong one.
+async function lookupSpotifyGenre(token: string, artist: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.spotify.com/v1/search?type=artist&limit=1&q=${encodeURIComponent(artist)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { artists?: { items?: { name?: string; genres?: string[] }[] } };
+    const item = data.artists?.items?.[0];
+    if (!item?.name || !item.genres?.length) return null;
+    if (normalizeArtistName(item.name) !== normalizeArtistName(artist)) return null;
+    return mapSpotifyGenres(item.genres);
+  } catch {
+    return null;
+  }
+}
+
+// Enriches concert rows' genre using real Spotify data where we can get a
+// confident match, falling back to whatever the page-scrape already guessed.
+// Cache is shared across the whole refresh run so the same touring artist
+// playing multiple venues only costs one Spotify lookup.
+async function enrichGenresWithSpotify(rows: { artist: string; genre: string }[], cache: Map<string, string | null>) {
+  const token = await getSpotifyToken();
+  if (!token) return;
+  for (const row of rows) {
+    const key = normalizeArtistName(row.artist);
+    if (!cache.has(key)) cache.set(key, await lookupSpotifyGenre(token, row.artist));
+    const spotifyGenre = cache.get(key);
+    if (spotifyGenre) row.genre = spotifyGenre;
+  }
+}
+
 // Each sports venue in the database is dedicated to exactly one team, so the
 // league is derived from the team name rather than trusting the model's
 // freeform genre field.
@@ -528,6 +618,7 @@ export async function refreshEvents(venueNames?: string[]) {
 
   const targets = venueNames?.length ? all.filter((v) => venueNames.includes(v.venue)) : all;
   const runId = crypto.randomUUID();
+  const spotifyGenreCache = new Map<string, string | null>();
 
   const results: { venue: string; found: number; status: string; error?: string }[] = [];
 
@@ -540,6 +631,7 @@ export async function refreshEvents(venueNames?: string[]) {
       const startedAt = Date.now();
       try {
         const rows = await scrapeVenue(venue, todayIso);
+        if (venue.category === "concerts" && rows.length) await enrichGenresWithSpotify(rows, spotifyGenreCache);
         if (rows.length) {
           const { error } = await supabaseAdmin
             .from("events")
