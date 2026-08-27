@@ -209,6 +209,15 @@ function cleanValue(value: string | undefined, maxLength: number) {
   return trimmed && !PLACEHOLDER_VALUE.test(trimmed) ? trimmed.slice(0, maxLength) : null;
 }
 
+// The model occasionally grabs a "Buy Tickets" button's href/label instead
+// of the listed price (e.g. "/buy-tickets"), which would otherwise render
+// as-is where a dollar amount belongs. Reject anything link-shaped.
+function cleanPrice(value: string | undefined) {
+  const trimmed = cleanValue(value, 40);
+  if (!trimmed) return null;
+  return /^\/|^https?:\/\//i.test(trimmed) ? null : trimmed;
+}
+
 // Some venue pages list everything in caps. Only touch names that are fully
 // uppercase (a formatting artifact) — anything already mixed-case (e.g.
 // "Bobby McFerrin") or fully lowercase (some artists are genuinely styled
@@ -457,7 +466,7 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
         date: e.date as string,
         time: cleanValue(e.time, 40),
         genre,
-        price: cleanValue(e.price, 40),
+        price: cleanPrice(e.price),
         ticket_url: cleanTicketUrl(e.ticketUrl, venue.url),
         image_url: cleanImageUrl(e.imageUrl),
         source: venue.source,
