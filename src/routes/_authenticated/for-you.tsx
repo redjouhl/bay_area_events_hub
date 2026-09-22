@@ -10,7 +10,7 @@ import { ConcertCard } from "@/components/ConcertCard";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 
-const TITLE = "Your For You Concert Feed | Happenly";
+const TITLE = "Your For You Concert Feed | Outsy";
 const DESCRIPTION =
   "Bay Area shows picked for you based on your saved genres, areas and price range, plus every concert you've favorited.";
 

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import type { Concert } from "@/data/concerts";
+import { pacificToday } from "@/lib/date-ranges";
 
 export const getEvents = createServerFn({ method: "GET" }).handler(async (): Promise<Concert[]> => {
   const supabase = createClient<Database>(
@@ -11,9 +12,14 @@ export const getEvents = createServerFn({ method: "GET" }).handler(async (): Pro
     { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
   );
 
+  // Without this, a stale/unscraped venue's past-dated rows never leave the
+  // homepage on their own, and — since results are ordered oldest-first —
+  // enough of them can even push genuinely upcoming events past the
+  // 1000-row cap below.
   const { data, error } = await supabase
     .from("events")
     .select("id, artist, support, venue, city, date, time, genre, price, ticket_url, image_url, source, trending, category")
+    .gte("date", pacificToday())
     .order("date", { ascending: true })
     .limit(1000);
 

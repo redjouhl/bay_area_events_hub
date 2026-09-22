@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, LogOut, Sparkles, SlidersHorizontal, Shield } from "lucide-react";
+import { LogOut, Sparkles, SlidersHorizontal, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { amIAdmin } from "@/lib/admin.functions";
@@ -23,9 +23,8 @@ export function SiteHeader() {
 
   return (
     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-6">
-      <Link to="/" className="flex items-center gap-2 text-display text-2xl tracking-widest text-foreground">
-        <CalendarDays className="h-6 w-6 text-primary" />
-        HAPPENLY
+      <Link to="/" className="flex items-center">
+        <img src="/outsy-wordmark.png" alt="Outsy" className="h-16 w-auto sm:h-20" />
       </Link>
 
       <nav className="flex items-center gap-2">

@@ -50,7 +50,7 @@ export const VENUE_SOURCES: VenueSource[] = [
   { venue: "Sheba Piano Lounge", city: "San Francisco", url: "https://shebapianolounge.com/", source: "Sheba Piano Lounge", category: "concerts" },
   { venue: "Golden Gate Park", city: "San Francisco", url: "https://goldengatepark.com/events", source: "Golden Gate Park", category: "concerts" },
   { venue: "The Greek Theatre", city: "Berkeley", url: "https://thegreekberkeley.com/", source: "The Greek Theatre Berkeley", category: "concerts" },
-  { venue: "The Henry J", city: "Berkeley", url: "https://www.thehenryj.org/", source: "The Henry J", category: "concerts" },
+  { venue: "The Henry J", city: "Oakland", url: "https://www.thehenryj.org/", source: "The Henry J", category: "concerts" },
   { venue: "The UC Theatre", city: "Berkeley", url: "https://www.theuctheatre.org/events/", source: "The UC Theatre", category: "concerts" },
   { venue: "Zellerbach Hall", city: "Berkeley", url: "https://calperformances.org/calendar/", source: "Cal Performances", category: "concerts" },
   { venue: "Freight & Salvage", city: "Berkeley", url: "https://thefreight.org/shows/", source: "Freight & Salvage", category: "concerts" },

@@ -55,6 +55,18 @@ function spotifySearchUrl(query: string) {
   return `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 }
 
+function YouTubeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  );
+}
+
+function youtubeSearchUrl(query: string) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
 function WhatsAppIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -78,7 +90,7 @@ export function eventPageUrl(concert: Pick<Concert, "id">) {
 
 // Builds the shareable channel links for one event. mailto:/sms:/wa.me all
 // take plain query params, so the same summary text is reused across each.
-// The link points back to the event's page on Happenly (not the external
+// The link points back to the event's page on Outsy (not the external
 // ticket link) so the person you share with lands on our site first.
 function shareLinks(concert: Concert) {
   const dateLabel = formatDateLabel(concert.dates?.length ? concert.dates : [concert.date]);
@@ -205,6 +217,7 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
   const isFree = isFreeEvent(concert);
   const soldOut = isSoldOut(concert);
   const showSpotify = concert.category === "concerts" || concert.category === "classical";
+  const showYouTube = concert.category === "comedy";
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = concert.imageUrl && !imageFailed;
 
@@ -327,6 +340,17 @@ export function ConcertCard({ concert, compact = false }: { concert: Concert; co
               className="rounded-full p-1.5 text-[#1DB954] transition-colors hover:bg-secondary hover:text-[#169c46]"
             >
               <SpotifyIcon className="h-5 w-5" />
+            </a>
+          )}
+          {showYouTube && (
+            <a
+              href={youtubeSearchUrl(concert.artist)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Search ${concert.artist} on YouTube`}
+              className="rounded-full p-1.5 text-[#FF0000] transition-colors hover:bg-secondary hover:text-[#cc0000]"
+            >
+              <YouTubeIcon className="h-5 w-5" />
             </a>
           )}
           <ShareButton concert={concert} />

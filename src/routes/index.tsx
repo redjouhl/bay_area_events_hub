@@ -39,7 +39,7 @@ function haversineMiles(a: { lat: number; lng: number }, b: { lat: number; lng: 
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-const TITLE = "BEST HAPPENINGS IN THE BAY | Happenly";
+const TITLE = "BEST HAPPENINGS IN THE BAY | Outsy";
 const DESCRIPTION =
   "Concerts, museums, festivals, and more: all in one place. Discover the best Bay Area events.";
 
@@ -666,8 +666,8 @@ function Index() {
         <div className="mx-auto max-w-6xl px-4 text-sm text-muted-foreground">
           <p>
             Know a show, venue, or community event we’re missing? Everyone’s welcome to send it our way at{" "}
-            <a href="mailto:info@happenly.app" className="text-primary underline decoration-primary/50 underline-offset-4 hover:text-primary/90">
-              info@happenly.app
+            <a href="mailto:info@outsy.io" className="text-primary underline decoration-primary/50 underline-offset-4 hover:text-primary/90">
+              info@outsy.io
             </a>
             {" "}and we’ll get it added!
           </p>

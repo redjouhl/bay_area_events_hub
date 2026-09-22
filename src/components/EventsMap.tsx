@@ -66,8 +66,8 @@ export function EventsMap({
     <div className="h-[600px] w-full overflow-hidden rounded-2xl border border-border">
       <MapContainer center={center} zoom={11} scrollWheelZoom className="h-full w-full">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Tiles &copy; Esri &mdash; Source: Esri, HERE, Garmin, USGS, NGA, EPA, NPS'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
         />
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]} icon={youAreHereIcon}>

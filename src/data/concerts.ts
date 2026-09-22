@@ -93,6 +93,7 @@ export const GENRES = [
   "Jazz",
   "Metal",
   "Latin",
+  "Country",
   "Punk",
   "Soul / R&B",
   "World Music",

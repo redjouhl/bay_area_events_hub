@@ -27,10 +27,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "Venue admin · Happenly" },
-      { name: "description", content: "Add, edit and bulk-import the venues Happenly scrapes for Bay Area events." },
-      { property: "og:title", content: "Venue admin · Happenly" },
-      { property: "og:description", content: "Manage the venue catalog powering Happenly's event listings." },
+      { title: "Venue admin · Outsy" },
+      { name: "description", content: "Add, edit and bulk-import the venues Outsy scrapes for Bay Area events." },
+      { property: "og:title", content: "Venue admin · Outsy" },
+      { property: "og:description", content: "Manage the venue catalog powering Outsy's event listings." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -221,7 +221,7 @@ function AdminPage() {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "happenly-venues.csv";
+    a.download = "outsy-venues.csv";
     a.click();
     URL.revokeObjectURL(url);
   }
