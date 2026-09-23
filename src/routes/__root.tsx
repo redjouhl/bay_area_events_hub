@@ -74,14 +74,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Outsy · Bay Area events" },
+      { title: "Happenly · Bay Area events" },
       { name: "description", content: "Discover the best concerts, museum exhibits, and events in the Bay Area." },
-      { name: "author", content: "Outsy" },
-      { property: "og:title", content: "Outsy · Bay Area events" },
+      { name: "author", content: "Happenly" },
+      { property: "og:title", content: "Happenly · Bay Area events" },
       { property: "og:description", content: "Discover the best concerts, museum exhibits, and events in the Bay Area." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@outsy" },
+      { name: "twitter:site", content: "@happenly" },
     ],
     links: [
       {
@@ -92,10 +92,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Baloo+2:wght@600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,

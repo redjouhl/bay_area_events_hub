@@ -15,7 +15,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 async function geocode(query: string): Promise<{ lat: number; lng: number } | null> {
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "OutsyEventsApp/1.0 (contact: redjouhl@gmail.com)" },
+    headers: { "User-Agent": "HappenlyEventsApp/1.0 (contact: redjouhl@gmail.com)" },
   });
   if (!res.ok) return null;
   const rows = (await res.json()) as { lat: string; lon: string }[];

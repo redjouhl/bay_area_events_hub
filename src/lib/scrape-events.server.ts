@@ -10,7 +10,6 @@ const ALLOWED_GENRES = [
   "Jazz",
   "Metal",
   "Latin",
-  "Country",
   "Punk",
   "Soul / R&B",
   "World Music",
@@ -58,23 +57,11 @@ type ScrapedEvent = {
 const SPORTS = /(soccer|football|basketball|hockey|baseball|cricket|wrestl|boxing|\bmma\b|\bufc\b|roller derby|rugby|lacrosse|\bvs\.?\b|oakland roots|golden state warriors|oakland ballers|golden state valkyries|san jose earthquakes|bay fc|san francisco unicorns)/i;
 // "baby" alone is deliberately excluded: too many real artist names contain
 // it (e.g. rap acts) and would false-positive into the Children genre.
-// "disney" is forced here too — Disney-branded events (on Ice, sing-alongs,
-// character meet-and-greets, etc.) are family content regardless of what
-// else the page copy says.
-const CHILDREN = /(story ?time|kids|children|family show|toddler|preschool|puppet|sing[- ]?along for kids|for babies|disney)/i;
-
-// The scrape model still defaults some well-known artists to "Rock" despite
-// the prompt telling it not to (Billy Strings and Kacey Musgraves both did,
-// at Oakland Arena) — named the same way sports teams and comedians are
-// elsewhere in this file. Checked against title/artist text, not the
-// model's raw genre guess, since by the time we see it that's often
-// already wrong.
-const KNOWN_COUNTRY_ARTISTS = /\b(billy strings|kacey musgraves)\b/i;
+const CHILDREN = /(story ?time|kids|children|family show|toddler|preschool|puppet|sing[- ]?along for kids|for babies)/i;
 
 function normalizeGenre(raw?: string, title?: string) {
   const text = `${title ?? ""} ${raw ?? ""}`;
   if (CHILDREN.test(text)) return "Children";
-  if (KNOWN_COUNTRY_ARTISTS.test(text)) return "Country";
   const g = (raw ?? "").toLowerCase();
   if (g.includes("hip") || g.includes("rap")) return "Hip-Hop";
   if (g.includes("electro") || g.includes("dance") || g.includes("house") || g.includes("techno"))
@@ -82,7 +69,6 @@ function normalizeGenre(raw?: string, title?: string) {
   if (g.includes("jazz")) return "Jazz";
   if (g.includes("metal")) return "Metal";
   if (g.includes("latin") || g.includes("salsa") || g.includes("cumbia")) return "Latin";
-  if (g.includes("country") || g.includes("bluegrass") || g.includes("americana")) return "Country";
   if (g.includes("punk")) return "Punk";
   if (g.includes("soul") || g.includes("r&b") || g.includes("blues") || g.includes("funk"))
     return "Soul / R&B";
@@ -106,7 +92,6 @@ function mapSpotifyGenres(genres: string[]): string | null {
   if (/jazz/.test(g)) return "Jazz";
   if (/metal/.test(g)) return "Metal";
   if (/latin|reggaeton|salsa|cumbia|bachata|banda|mariachi|corrido/.test(g)) return "Latin";
-  if (/\bcountry\b|bluegrass|americana|old time/.test(g)) return "Country";
   if (/punk/.test(g)) return "Punk";
   if (/soul|r&b|\bfunk\b|blues|gospel/.test(g)) return "Soul / R&B";
   if (
@@ -115,7 +100,7 @@ function mapSpotifyGenres(genres: string[]): string | null {
     )
   )
     return "World Music";
-  if (/indie|folk|singer-songwriter/.test(g)) return "Indie";
+  if (/indie|folk|singer-songwriter|americana|bluegrass|country|old time/.test(g)) return "Indie";
   if (/^rock$|\brock\b/.test(g)) return "Rock";
   return null;
 }
@@ -212,7 +197,7 @@ function normalizeMuseumType(raw?: string, title?: string) {
   if (/(design|fashion|architecture|craft)/i.test(text)) return "Design";
   if (/(film|cinema|video|screening)/i.test(text)) return "Film";
   if (/(interactive|digital|tech|immersive|experience)/i.test(text)) return "Interactive";
-  if (/(family|kids|children|disney)/i.test(text)) return "Family";
+  if (/(family|kids|children)/i.test(text)) return "Family";
   if (/(special|temporary|featured|rotating|current)/i.test(text)) return "Special Exhibition";
   if (/(art|painting|sculpture|contemporary|modern|gallery)/i.test(text)) return "Art";
   const exact = ALLOWED_MUSEUM_TYPES.find((x) => x.toLowerCase() === lower);
@@ -260,7 +245,7 @@ function normalizeTheaterType(raw?: string, title?: string) {
   if (/(world premiere|new work|new play)/i.test(text)) return "New Work";
   if (/(revival|classic|shakespeare|chekhov|ibsen)/i.test(text)) return "Classic Revival";
   if (/(immersive|interactive)/i.test(text)) return "Immersive";
-  if (/(family|kids|children|disney)/i.test(text)) return "Family";
+  if (/(family|kids|children)/i.test(text)) return "Family";
   if (/(comedy|farce)/i.test(text)) return "Comedy";
   if (/(drama|tragedy)/i.test(text)) return "Drama";
   const exact = ALLOWED_THEATER_TYPES.find((x) => x.toLowerCase() === lower);
@@ -277,7 +262,7 @@ function normalizeClassicalType(raw?: string, title?: string) {
   if (/(organ|sacred|evensong|vespers|cathedral concert)/i.test(text)) return "Organ / Sacred";
   if (/(recital|solo piano|piano recital|violin recital)/i.test(text)) return "Recital";
   if (/(new music|premiere|contemporary|21st[- ]century)/i.test(text)) return "Contemporary Classical";
-  if (/(family|kids|children|disney)/i.test(text)) return "Family Concert";
+  if (/(family|kids|children)/i.test(text)) return "Family Concert";
   if (/(symphony|orchestra|philharmonic|concerto|symphonic)/i.test(text)) return "Symphony";
   const exact = ALLOWED_CLASSICAL_TYPES.find((x) => x.toLowerCase() === lower);
   return exact ?? "Other";
@@ -288,24 +273,6 @@ function isSportsEvent(raw?: string, title?: string) {
   if (SPORTS.test(text)) return true;
   const g = (raw ?? "").toLowerCase();
   return g.includes("sport");
-}
-
-// A general-purpose "concerts" venue occasionally books a stand-up
-// comedian instead of a musician (Jo Koy at a music venue was the case
-// that surfaced this). Left alone, the concerts genre picker has nothing
-// comedy-shaped to match, and the model's page-scrape guess tends to
-// default to "Rock" for an artist it doesn't recognize as a musician. So
-// this is checked before genre normalization and moves the whole row to
-// the Comedy category instead. Named comedians are hardcoded the same
-// way sports team names are above, since there's no generic keyword that
-// reliably says "this artist is a comedian" — add more names here as
-// they turn up.
-const COMEDY_SIGNAL = /(stand-?up comedy|stand-?up comedian|\bcomedian\b|comedy (show|night|tour|special))/i;
-const KNOWN_COMEDIANS = /\b(jo koy|gabriel iglesias|fluffy)\b/i;
-
-function isComedianBooking(raw?: string, title?: string) {
-  const text = `${title ?? ""} ${raw ?? ""}`;
-  return COMEDY_SIGNAL.test(text) || KNOWN_COMEDIANS.test(text);
 }
 
 const NON_EVENT = /(yoga|fitness class|parking|tour of|museum|open gym|private event|luxury suite|season ticket)/i;
@@ -464,11 +431,11 @@ function buildPrompt(venue: VenueSource, todayIso: string) {
     `Extract every upcoming live music or entertainment event listed on this page for ${venue.venue}. ` +
     `Today's date is ${todayIso}; assume listings without a year fall on the next occurrence of that date. ` +
     `Return date as YYYY-MM-DD, time as a readable start time like "8:00 PM", price as a short string ` +
-    `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Country, Punk, Soul / R&B, World Music, Open Mic, Children, Other. ` +
-    `Many venue pages tag each listing with its own genre/category right on the page (a colored label or text like "Jazz", "Bluegrass", "Reggae", "Workshop") — when a listing has one, that's the primary signal: map it to the closest allowed value instead of guessing from the artist name. ` +
+    `(e.g. "$35" or "Free") or null, genre as one of: Indie, Rock, Hip-Hop, Electronic, Jazz, Metal, Latin, Punk, Soul / R&B, World Music, Open Mic, Children, Other. ` +
+    `Many venue pages tag each listing with its own genre/category right on the page (a colored label or text like "Jazz", "Bluegrass", "Reggae", "Americana", "Workshop") — when a listing has one, that's the primary signal: map it to the closest allowed value (e.g. Bluegrass/Country/Folk/Americana/Old Time -> Indie) instead of guessing from the artist name. ` +
     `If there's no such label, determine genre from what you actually know about the artist's real musical style — don't default to Rock just because the page gives you nothing to go on. ` +
     `Use Open Mic for open mic nights, jam sessions, and other come-one-come-all musician nights. ` +
-    `Use Country for country, bluegrass, and Americana acts (e.g. Billy Strings, Kacey Musgraves) — don't fold these into Indie. Use World Music for reggae, ska, afrobeat, African, Bollywood/Indian, Middle Eastern, or other global/traditional genres. Use Indie for folk, singer-songwriter, and other non-mainstream acoustic/alternative acts that aren't specifically country or bluegrass. ` +
+    `Use World Music for reggae, ska, afrobeat, African, Bollywood/Indian, Middle Eastern, or other global/traditional genres. Use Indie for folk, Americana, singer-songwriter, and other non-mainstream acoustic/alternative acts. ` +
     `If you don't actually recognize the artist or their style, use Other rather than guessing Rock as a safe default — a wrong specific genre is worse than an honest Other. Also use Other for listings that aren't really a performance (e.g. a paid class/workshop) even if a specific instructor is well-known for a genre. ` +
     `Return ticketUrl as the absolute ticket link (fall back to the page URL). Return imageUrl as the absolute URL of that specific listing's own artist photo or show poster if one is shown — each listing has its own image; never reuse another listing's photo just because they're adjacent on the page or share a venue, unless the page explicitly shows one shared image for a multi-act bill. Use null if there isn't one. ` +
     `Put the headliner in artist and any opener/tour name in support. ` +
@@ -580,14 +547,12 @@ async function scrapeVenue(venue: VenueSource, todayIso: string) {
     .filter((e) => !nonEvent.test(e.artist as string))
     .filter((e) => isSports || !isSportsEvent(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`))
     .map((e) => {
-      const text = `${e.artist ?? ""} ${e.support ?? ""}`;
-      const forcedComedy = category === "concerts" && isComedianBooking(e.genre, text);
-      const genre = forcedComedy ? normalizeComedyType(e.genre, text) : normalize(e.genre, text);
+      const genre = normalize(e.genre, `${e.artist ?? ""} ${e.support ?? ""}`);
       // A classical-venue listing that isn't really a musical performance
       // (a lecture, a hybrid multimedia work, etc.) goes to the "Other"
       // category instead of cluttering Classical / Symphony with a genre
       // that doesn't belong there.
-      const rowCategory = forcedComedy ? "comedy" : isClassical && genre === "Other" ? "other" : category;
+      const rowCategory = isClassical && genre === "Other" ? "other" : category;
       return {
         fingerprint: fingerprint(venue.venue, e.date as string, e.artist as string, rowCategory),
         artist: toTitleCase((e.artist as string).trim().slice(0, 200)),
@@ -632,13 +597,6 @@ export async function refreshEvents(venueNames?: string[]) {
     day: "2-digit",
   }).format(new Date());
 
-  // Sweep out anything that's already in the past. This piggybacks on
-  // whatever already triggered a refresh (the weekly cron or a manual
-  // hook call) instead of a separate midnight job, since deleting rows
-  // is a plain Supabase query — it doesn't touch Firecrawl, so it costs
-  // no extra scrape credits regardless of how often it runs.
-  await supabaseAdmin.from("events").delete().lt("date", todayIso);
-
   // Venues live in the database so new cities/venues never require a code change.
   // The hardcoded list stays only as a fallback if the table is empty.
   const { data: venueRows } = await supabaseAdmin
@@ -673,13 +631,7 @@ export async function refreshEvents(venueNames?: string[]) {
       const startedAt = Date.now();
       try {
         const rows = await scrapeVenue(venue, todayIso);
-        // Rows forced into Comedy above (a comedian booked at a concerts
-        // venue) skip Spotify enrichment too — remapping "Rock" is no fix
-        // if the next step reintroduces a music genre from a stray tag match.
-        const concertRows = rows.filter((r) => r.category === "concerts");
-        if (venue.category === "concerts" && concertRows.length) {
-          await enrichGenresWithSpotify(concertRows, spotifyGenreCache);
-        }
+        if (venue.category === "concerts" && rows.length) await enrichGenresWithSpotify(rows, spotifyGenreCache);
         if (rows.length) {
           const { error } = await supabaseAdmin
             .from("events")

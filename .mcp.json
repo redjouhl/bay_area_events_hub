@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "knowi": {
-      "type": "http",
-      "url": "https://www.knowi.com/api/2.0/mcp"
-    }
-  }
-}

@@ -12,9 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
-const TITLE = "Your Concert Preferences | Outsy";
+const TITLE = "Your Concert Preferences | Happenly";
 const DESCRIPTION =
-  "Pick the genres, cities and price range you care about so Outsy can surface the Bay Area shows that fit you.";
+  "Pick the genres, cities and price range you care about so Happenly can surface the Bay Area shows that fit you.";
 
 export const Route = createFileRoute("/_authenticated/preferences")({
   head: () => ({

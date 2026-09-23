@@ -15,15 +15,15 @@ export const Route = createFileRoute("/events/$eventId")({
   head: ({ loaderData }) => {
     const event = loaderData?.event;
     if (!event) {
-      return { meta: [{ title: "Event not found · Outsy" }] };
+      return { meta: [{ title: "Event not found · Happenly" }] };
     }
     const dateLabel = formatDateLabel([event.date]);
     const description = `${event.artist} at ${event.venue}, ${event.city} on ${dateLabel}.`;
     return {
       meta: [
-        { title: `${event.artist} · Outsy` },
+        { title: `${event.artist} · Happenly` },
         { name: "description", content: description },
-        { property: "og:title", content: `${event.artist} · Outsy` },
+        { property: "og:title", content: `${event.artist} · Happenly` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         ...(event.imageUrl ? [{ property: "og:image", content: event.imageUrl }] : []),
@@ -47,7 +47,7 @@ function EventDetailPage() {
             This event may have been removed, or the link isn't quite right.
           </p>
           <Link to="/" className="mt-6 inline-block text-primary underline decoration-primary/50 underline-offset-4">
-            Back to Outsy
+            Back to Happenly
           </Link>
         </div>
       </div>

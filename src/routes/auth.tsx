@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Music2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-const TITLE = "Sign in to Outsy | Bay Area Concert Alerts";
+const TITLE = "Sign in to Happenly | Bay Area Concert Alerts";
 const DESCRIPTION =
-  "Create an Outsy account to save shows, set your genre and city preferences, and get a personalised Bay Area concert feed.";
+  "Create a Happenly account to save shows, set your genre and city preferences, and get a personalised Bay Area concert feed.";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -64,8 +65,8 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-16">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center">
-          <img src="/outsy-wordmark.png" alt="Outsy" className="h-16 w-auto sm:h-20" />
+        <Link to="/" className="flex items-center gap-2 text-display text-2xl tracking-widest">
+          <Music2 className="h-6 w-6 text-primary" /> HAPPENLY
         </Link>
 
         <h1 className="mt-8 text-5xl leading-none">
